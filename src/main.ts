@@ -227,8 +227,8 @@ function timelineRow(event: TimelineEvent): 'above' | 'below' {
 function createSectorTabs(): string {
   return sectorOrder
     .map((sector) => {
-      const active = selectedSector === sector ? 'active' : '';
-      return `<button class="sector-tab ${active}" type="button" data-sector="${sector}">${sectorTitles[sector]}</button>`;
+      const isActive = selectedSector === sector;
+      return `<button class="sector-tab ${isActive ? 'active' : ''}" type="button" role="tab" aria-selected="${isActive}" data-sector="${sector}">${sectorTitles[sector]}</button>`;
     })
     .join('');
 }
@@ -261,8 +261,8 @@ function createTimelineList(): string {
   return timelineSorted
     .map((event, index) => {
       const cls = categoryClass(event);
-      const active = index === selectedEventIndex ? 'active' : '';
-      return `<button type="button" class="timeline-list-event ${cls} ${active}" data-event-index="${index}"><span>${event.year}</span>${event.label}</button>`;
+      const isActive = index === selectedEventIndex;
+      return `<button type="button" class="timeline-list-event ${cls} ${isActive ? 'active' : ''}" data-event-index="${index}" aria-expanded="${isActive}" aria-controls="timeline-details"><span>${event.year}</span>${event.label}</button>`;
     })
     .join('');
 }
@@ -331,7 +331,7 @@ function renderApp(): void {
         <p class="lead">Adversaries are collecting your encrypted communications today. RSA and ECC cannot be broken now - but they will be. When quantum computers arrive, every stored ciphertext becomes readable.</p>
         <p class="lead">This is Harvest Now, Decrypt Later. It is not a future threat. It is a present collection strategy.</p>
 
-        <div class="act-strip" aria-label="Three-act HNDL model">
+        <div class="act-strip" role="region" aria-roledescription="animation" aria-label="Three-act HNDL attack model: Harvest, Wait, Decrypt">
           <div class="act-card act-1">
             <h3>ACT 1: HARVEST (2026)</h3>
             <p>Your data -> [padlock] -> adversary collector</p>

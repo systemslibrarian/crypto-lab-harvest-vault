@@ -37,6 +37,24 @@ html[data-theme='light'] {
   box-sizing: border-box;
 }
 
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0.5rem;
+  z-index: 100;
+  background: var(--bg);
+  color: var(--text);
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--focus);
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.skip-link:focus {
+  left: 1rem;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -216,12 +234,14 @@ p {
   border-radius: 8px;
   color: #fff;
   font-size: 0.8rem;
-  padding: 0.25rem;
+  font-weight: bold;
+  padding: 0.4rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
   background: linear-gradient(
     to right,
-    rgba(255, 34, 34, 0.15),
-    rgba(255, 34, 34, 0.55),
-    rgba(255, 34, 34, 0.15)
+    rgba(255, 34, 34, 0.25),
+    rgba(255, 34, 34, 0.65),
+    rgba(255, 34, 34, 0.25)
   );
 }
 
@@ -390,9 +410,11 @@ p {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.5rem 0.75rem;
+  min-height: 44px;
   background: transparent;
   color: var(--text);
   cursor: pointer;
+  font-size: 0.95rem;
 }
 
 .sector-tab.active {
@@ -409,6 +431,8 @@ p {
 input[type='range'] {
   width: 100%;
   accent-color: var(--harvest);
+  height: 28px;
+  cursor: pointer;
 }
 
 .verdict {
@@ -626,6 +650,13 @@ summary:focus-visible {
     gap: 0.45rem;
     max-height: 380px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .timeline-list-event {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 
   .matrix-grid {
@@ -634,6 +665,27 @@ summary:focus-visible {
 
   .matrix-dot {
     max-width: 118px;
+    min-height: 36px;
+  }
+
+  .harvest-bar {
+    flex-wrap: wrap;
+  }
+
+  .harvested-past,
+  .harvested-now,
+  .harvested-qday {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding: 0.3rem;
+  }
+
+  .sector-tabs {
+    gap: 0.4rem;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
   }
 }
 
