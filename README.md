@@ -31,6 +31,18 @@ healthcare, government, finance, legal, library, and enterprise.
 
 https://systemslibrarian.github.io/crypto-lab-harvest-vault/
 
+## GitHub Pages Deployment
+
+This project is configured for GitHub Pages via GitHub Actions.
+
+1. Push changes to the `main` branch.
+2. In GitHub repo settings, set Pages source to `GitHub Actions`.
+3. The workflow in `.github/workflows/deploy.yml` builds with Vite and deploys `dist/`.
+
+The Vite `base` path is already set in `vite.config.ts` for this repository:
+
+`/crypto-lab-harvest-vault/`
+
 ## What Can Go Wrong
 
 - **PQC migration does not protect already-harvested data.** Deploying
