@@ -167,6 +167,11 @@ const mitigationCards = [
   },
 ];
 
+const persistedTheme = localStorage.getItem('cv-theme');
+if (persistedTheme === 'dark' || persistedTheme === 'light') {
+  document.documentElement.setAttribute('data-theme', persistedTheme);
+}
+
 const appRoot = document.querySelector<HTMLDivElement>('#app');
 if (!appRoot) {
   throw new Error('App root not found.');
