@@ -58,7 +58,7 @@ export const SECTOR_PRESETS: Record<
   library: {
     label: 'Public Library',
     migrationYears: 4,
-    sensitivityYears: 15,
+    sensitivityYears: 30,
     description: 'Patron privacy, reading records, registration data',
     examples: ['Patron records', 'ILS API traffic', 'Registration PII'],
   },
