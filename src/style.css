@@ -907,6 +907,207 @@ input[type='range'] {
   }
 }
 
+/* ---- confidence badges (used in Evidence + reused elsewhere) ---- */
+.conf-badge {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid;
+  /* Text stays --text (always AA); the hue lives in the border + faint fill so
+     small badge text never drops below contrast in either theme. */
+  color: var(--text);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.conf-confirmed {
+  border-color: #1f9d57;
+  background: rgba(31, 157, 87, 0.16);
+}
+
+.conf-standardized {
+  border-color: #2b8fd0;
+  background: rgba(43, 143, 208, 0.16);
+}
+
+.conf-estimate {
+  border-color: #d08a1a;
+  background: rgba(208, 138, 26, 0.16);
+}
+
+.conf-illustrative {
+  border-color: #8aa0ac;
+  background: rgba(138, 160, 172, 0.16);
+}
+
+.conf-recommendation {
+  border-color: #b15bd0;
+  background: rgba(177, 91, 208, 0.16);
+}
+
+/* ---- threat model ---- */
+.threat-model {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+}
+
+.tm-row {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+}
+
+.tm-row dt {
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.tm-row dd {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+@media (min-width: 760px) {
+  .tm-row {
+    grid-template-columns: 240px 1fr;
+    gap: 1rem;
+    align-items: baseline;
+  }
+}
+
+/* ---- protocol examples ---- */
+.protocol-grid {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.protocol-card {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.protocol-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.protocol-card h3 {
+  font-size: 0.95rem;
+}
+
+.protocol-card p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.proto-tag {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.proto-vulnerable {
+  border-left-color: var(--danger);
+}
+.proto-vulnerable .proto-tag {
+  border-color: var(--danger);
+}
+.proto-partial {
+  border-left-color: var(--warning);
+}
+.proto-partial .proto-tag {
+  border-color: var(--warning);
+}
+.proto-strong {
+  border-left-color: var(--safe);
+}
+.proto-strong .proto-tag {
+  border-color: var(--safe);
+}
+.proto-different {
+  border-left-color: var(--harvest);
+}
+.proto-different .proto-tag {
+  border-color: var(--harvest);
+}
+
+@media (min-width: 768px) {
+  .protocol-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---- evidence ---- */
+.conf-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.conf-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.evidence-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.evidence-item summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+}
+
+.evidence-claim {
+  font-weight: 600;
+}
+
+.evidence-item p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.evidence-item[open] {
+  background: rgba(0, 170, 255, 0.06);
+}
+
 footer {
   margin-top: 1rem;
   border: 1px solid var(--line);

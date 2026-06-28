@@ -74,11 +74,20 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
       'Every RSA/ECC-encrypted communication sent today is potentially stored by state-level adversaries. The harvest is ongoing.',
   },
   {
+    year: 2026,
+    label: 'US quantum-security executive orders',
+    category: 'migration',
+    description:
+      'June 2026: two executive orders ("Securing the Nation Against Advanced Cryptographic Attacks" and a quantum-innovation order) direct federal agencies to inventory cryptography and migrate critical systems to PQC, and direct the FAR Council to require contractor compliance with NIST standards.',
+    source: 'The White House, Presidential Actions, June 22, 2026 (whitehouse.gov).',
+  },
+  {
     year: 2027,
     label: 'NSA CNSA 2.0 deadline: new systems',
     category: 'migration',
     description:
-      'All new NSA/DoD systems must use PQC. Legacy systems migration underway.',
+      'From January 1, 2027 the NSA expects new national-security-system deployments to comply with CNSA 2.0 (ML-KEM-1024, ML-DSA-87, AES-256, SHA-384/512).',
+    source: 'NSA, Post-Quantum Cybersecurity Resources / CNSA 2.0 (nsa.gov).',
   },
   {
     year: 2029,
@@ -93,6 +102,14 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
     category: 'qday-estimate',
     description:
       'Most estimates center on 2030±3 years for cryptographically relevant quantum computers. Not a hard date — a probability distribution.',
+  },
+  {
+    year: 2031,
+    label: 'US federal PQC migration deadline',
+    category: 'migration',
+    description:
+      'The June 2026 executive order directs agencies to migrate their most critical systems to quantum-resistant key establishment by Dec 31, 2030 and digital signatures by Dec 31, 2031. Mosca\'s 2015 paper independently put a ~1/2 chance of RSA-2048 falling by 2031.',
+    source: 'White House EO (June 2026); Mosca, IACR ePrint 2015/1075.',
   },
   {
     year: 2033,

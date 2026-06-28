@@ -1,6 +1,56 @@
 import './style.css';
 import { computeMosca, SECTOR_PRESETS, type MoscaResult } from './mosca';
 import { TIMELINE_EVENTS, type TimelineEvent } from './timeline';
+import {
+  SOURCES,
+  THREAT_MODEL,
+  PROTOCOL_EXAMPLES,
+  CONFIDENCE_LABEL,
+  CONFIDENCE_BLURB,
+  type Confidence,
+} from './content';
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function confidenceBadge(kind: Confidence): string {
+  return `<span class="conf-badge conf-${kind}" title="${escapeHtml(CONFIDENCE_BLURB[kind])}">${CONFIDENCE_LABEL[kind]}</span>`;
+}
+
+function createThreatModel(): string {
+  const rows = THREAT_MODEL.map(
+    (row) => `<div class="tm-row"><dt>${row.label}</dt><dd>${row.body}</dd></div>`,
+  ).join('');
+  return `<dl class="threat-model">${rows}</dl>`;
+}
+
+function createProtocolExamples(): string {
+  return PROTOCOL_EXAMPLES.map(
+    (ex) => `
+      <article class="protocol-card proto-${ex.verdict}">
+        <header><h3>${ex.name}</h3><span class="proto-tag">${ex.verdictLabel}</span></header>
+        <p>${ex.body}</p>
+      </article>`,
+  ).join('');
+}
+
+function createEvidence(): string {
+  return SOURCES.map((s) => {
+    const cite = s.url
+      ? `<a href="${s.url}" target="_blank" rel="noopener">${escapeHtml(s.source)}</a>`
+      : escapeHtml(s.source);
+    return `
+      <details class="evidence-item">
+        <summary><span class="evidence-claim">${s.claim}</span> ${confidenceBadge(s.confidence)}</summary>
+        <p>${s.detail}</p>
+        <p class="small-note">Source: ${cite}</p>
+      </details>`;
+  }).join('');
+}
 
 type SectorKey = keyof typeof SECTOR_PRESETS | 'custom';
 
@@ -504,6 +554,12 @@ function renderApp(): void {
         </div>
       </section>
 
+      <section class="panel threatmodel-panel" id="threatmodel">
+        <h2>THE THREAT MODEL, STATED PLAINLY</h2>
+        <p class="lead">Before the math, be precise about who does what. Overclaiming ("quantum breaks all encryption") is as unhelpful as dismissing it. Here is the actual model.</p>
+        ${createThreatModel()}
+      </section>
+
       <section class="panel breaks-panel" id="whatbreaks">
         <h2>WHAT QUANTUM BREAKS — AND WHAT IT DOESN'T</h2>
         <p class="lead">The harvest does not attack the cipher protecting your session. It attacks the <strong>handshake</strong> that established the session key. Break the handshake, recover the key, read everything underneath. That is why "we use AES-256" is not an answer.</p>
@@ -530,6 +586,12 @@ function renderApp(): void {
           </article>
         </div>
         <p class="breaks-note small-note">So why doesn't symmetric safety save you? Because that AES session key was delivered by the public-key handshake. Quantum breaks the handshake, recovers the AES key, and decrypts the session — even though AES itself was never broken. See <strong>crypto-lab-grover</strong> for the symmetric story and <strong>crypto-lab-shor</strong> for the attack itself.</p>
+      </section>
+
+      <section class="panel protocols-panel" id="protocols">
+        <h2>SAME THREAT, FOUR REAL PROTOCOLS</h2>
+        <p class="lead">The difference between "exposed" and "protected" is concrete. Here is how the same harvested-traffic threat plays out across protocols you actually run.</p>
+        <div class="protocol-grid">${createProtocolExamples()}</div>
       </section>
 
       <section class="panel timeline-panel" id="timeline">
@@ -623,6 +685,17 @@ function renderApp(): void {
           <p>2026 has been designated the Year of Quantum Security by FBI, NIST, and CISA.</p>
           <p>If you are not migrating, you are being harvested.</p>
         </article>
+      </section>
+
+      <section class="panel evidence-panel" id="evidence">
+        <h2>EVIDENCE &amp; CONFIDENCE</h2>
+        <p class="lead">This topic is easy to dismiss as speculation, so every major claim is labelled by how well-established it is — and linked to a primary source. Expand any claim to see the basis.</p>
+        <div class="conf-legend" role="list">
+          ${(Object.keys(CONFIDENCE_LABEL) as Confidence[])
+            .map((k) => `<span role="listitem">${confidenceBadge(k)} <span class="small-note">${CONFIDENCE_BLURB[k]}</span></span>`)
+            .join('')}
+        </div>
+        <div class="evidence-list">${createEvidence()}</div>
       </section>
     </main>
 
