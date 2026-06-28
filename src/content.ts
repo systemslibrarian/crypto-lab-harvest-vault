@@ -122,6 +122,52 @@ export const THREAT_MODEL: ThreatRow[] = [
   },
 ];
 
+export interface ZScenario {
+  label: string;
+  year: number;
+  note: string;
+}
+
+// Teaching uncertainty: the lesson is surviving the range, not guessing the date.
+export const Z_SCENARIOS: ZScenario[] = [
+  { label: 'Aggressive', year: 2028, note: 'optimistic researcher estimates' },
+  { label: 'Center', year: 2030, note: 'consensus center, ~±3 years' },
+  { label: 'Conservative', year: 2035, note: 'government planning backstop' },
+];
+
+export interface Misconception {
+  myth: string;
+  reality: string;
+}
+
+export const MISCONCEPTIONS: Misconception[] = [
+  {
+    myth: '“We use AES-256, so we’re safe.”',
+    reality:
+      'Mostly wrong for HNDL. AES-256 is fine — but the AES session key is delivered by an RSA/ECC handshake that Shor breaks. Recover the handshake, recover the key, read the session.',
+  },
+  {
+    myth: '“We can wait until quantum computers actually arrive.”',
+    reality:
+      'Wrong. The ciphertext is being collected now. Waiting means an adversary already holds years of your traffic before you even begin migrating.',
+  },
+  {
+    myth: '“Migrating to PQC fixes our old traffic too.”',
+    reality:
+      'Wrong. PQC protects sessions from deployment onward. Anything captured before you migrated stays exposed — only forward secrecy deployed before collection, or never sending it, helps.',
+  },
+  {
+    myth: '“This only matters if Q-Day is exactly 2030.”',
+    reality:
+      'Wrong. Mosca’s theorem works across the whole plausible range. If X + Y exceeds even the optimistic Z, you are exposed regardless of the exact date.',
+  },
+  {
+    myth: '“This is only a government problem.”',
+    reality:
+      'Wrong. Healthcare, legal, finance, libraries, and research hold data that must stay secret for decades — far longer than the migration-plus-Q-Day window.',
+  },
+];
+
 export interface ProtocolExample {
   name: string;
   verdict: 'vulnerable' | 'partial' | 'strong' | 'different';

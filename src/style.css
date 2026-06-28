@@ -1108,6 +1108,136 @@ input[type='range'] {
   background: rgba(0, 170, 255, 0.06);
 }
 
+/* ---- learning checkpoints ---- */
+.checkpoint {
+  margin-top: 1rem;
+  border: 1px dashed color-mix(in srgb, var(--harvest) 45%, var(--line));
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  background: rgba(0, 170, 255, 0.05);
+}
+
+.checkpoint summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.checkpoint p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* ---- three-scenario Q-Day strip ---- */
+.scenario-block {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.scenario-strip {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 1fr;
+}
+
+.scenario-chip {
+  display: grid;
+  gap: 0.2rem;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.scenario-chip .sc-label {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+}
+
+.scenario-chip .sc-verdict {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.scenario-chip .sc-math {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.scenario-chip.at-risk {
+  border-left-color: var(--danger);
+  background: rgba(255, 34, 34, 0.08);
+}
+
+.scenario-chip.at-risk .sc-verdict {
+  color: var(--danger);
+}
+
+.scenario-chip.ok {
+  border-left-color: var(--safe);
+  background: rgba(0, 204, 102, 0.08);
+}
+
+.scenario-chip.ok .sc-verdict {
+  color: var(--safe);
+}
+
+@media (min-width: 700px) {
+  .scenario-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ---- misconception cards ---- */
+.myth-grid {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.myth-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.myth-card .myth {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.myth-card .reality {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.reality-tag {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--safe);
+  border: 1px solid var(--safe);
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+  margin-right: 0.3rem;
+}
+
+@media (min-width: 860px) {
+  .myth-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 footer {
   margin-top: 1rem;
   border: 1px solid var(--line);

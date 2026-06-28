@@ -5,6 +5,8 @@ import {
   SOURCES,
   THREAT_MODEL,
   PROTOCOL_EXAMPLES,
+  MISCONCEPTIONS,
+  Z_SCENARIOS,
   CONFIDENCE_LABEL,
   CONFIDENCE_BLURB,
   type Confidence,
@@ -36,6 +38,36 @@ function createProtocolExamples(): string {
         <p>${ex.body}</p>
       </article>`,
   ).join('');
+}
+
+function checkpoint(question: string, answer: string): string {
+  return `<details class="checkpoint"><summary>Check yourself — ${question}</summary><p>${answer}</p></details>`;
+}
+
+function createMisconceptions(): string {
+  return MISCONCEPTIONS.map(
+    (m) => `
+      <article class="myth-card">
+        <p class="myth">${m.myth}</p>
+        <p class="reality"><span class="reality-tag">Reality</span> ${m.reality}</p>
+      </article>`,
+  ).join('');
+}
+
+// The three-scenario verdict strip — recomputed from the current X/Y at each
+// plausible Q-Day. Teaches "survive the range", not "guess the date".
+function createScenarioStrip(): string {
+  return Z_SCENARIOS.map((s) => {
+    const qd = Math.max(s.year - CURRENT_YEAR, 1);
+    const m = computeMosca({ migrationYears, sensitivityYears, qDayYears: qd }, CURRENT_YEAR);
+    return `
+      <div class="scenario-chip ${m.atRisk ? 'at-risk' : 'ok'}">
+        <span class="sc-label">${s.label} · Q-Day ${s.year}</span>
+        <span class="sc-verdict">${m.atRisk ? 'AT RISK' : 'NOT AT RISK'}</span>
+        <span class="sc-math">X+Y=${m.XplusY} vs Z=${m.Z}</span>
+        <span class="small-note">${s.note}</span>
+      </div>`;
+  }).join('');
 }
 
 function createEvidence(): string {
@@ -498,6 +530,9 @@ function refreshDynamic(): void {
   }
   setText('#mosca-status', moscaStatus(mosca));
 
+  const scenarioStrip = document.querySelector<HTMLElement>('#scenario-strip');
+  if (scenarioStrip) scenarioStrip.innerHTML = createScenarioStrip();
+
   const sectorContext = document.querySelector<HTMLElement>('.sector-context');
   if (sectorContext) sectorContext.innerHTML = renderSectorContext();
 
@@ -586,12 +621,26 @@ function renderApp(): void {
           </article>
         </div>
         <p class="breaks-note small-note">So why doesn't symmetric safety save you? Because that AES session key was delivered by the public-key handshake. Quantum breaks the handshake, recovers the AES key, and decrypts the session — even though AES itself was never broken. See <strong>crypto-lab-grover</strong> for the symmetric story and <strong>crypto-lab-shor</strong> for the attack itself.</p>
+        ${checkpoint(
+          'does AES-256 fail under Shor’s algorithm?',
+          'No. Shor breaks public-key crypto (RSA/ECC key exchange and signatures). AES-256 faces only Grover, which halves its security to a still-safe ~128-bit level. The handshake is the HNDL target, not the bulk cipher.',
+        )}
       </section>
 
       <section class="panel protocols-panel" id="protocols">
         <h2>SAME THREAT, FOUR REAL PROTOCOLS</h2>
         <p class="lead">The difference between "exposed" and "protected" is concrete. Here is how the same harvested-traffic threat plays out across protocols you actually run.</p>
         <div class="protocol-grid">${createProtocolExamples()}</div>
+        ${checkpoint(
+          'does TLS 1.3 forward secrecy (ECDHE) survive harvesting?',
+          'Not against HNDL. ECDHE protects against a future server-key compromise, but the ephemeral handshake is in the captured transcript and falls to Shor. Hybrid X25519+ML-KEM is what survives.',
+        )}
+      </section>
+
+      <section class="panel myths-panel" id="myths">
+        <h2>FIVE THINGS PEOPLE GET WRONG</h2>
+        <p class="lead">Corrected misconceptions stick better than isolated facts. If you remember nothing else, remember why each of these is wrong.</p>
+        <div class="myth-grid">${createMisconceptions()}</div>
       </section>
 
       <section class="panel timeline-panel" id="timeline">
@@ -620,6 +669,10 @@ function renderApp(): void {
           <h3>Harvested Data Accumulation</h3>
           <div class="harvest-bar" id="harvest-bar" role="img" aria-label="Encrypted data accumulating from 2013, through the harvest happening now, into the window where it becomes decryptable at Q-Day">${harvestBarInner(qDayYearAbsolute)}</div>
         </div>
+        ${checkpoint(
+          'can deploying PQC today protect traffic captured last year?',
+          'No. PQC protects new sessions from deployment onward. Last year’s captured ciphertext is already in the adversary’s store; only protection in place before collection — or never sending it — helps.',
+        )}
       </section>
 
       <section class="panel calculator-panel" id="mosca">
@@ -642,6 +695,16 @@ function renderApp(): void {
 
         <p class="sr-only" id="mosca-status" role="status" aria-live="polite">${moscaStatus(mosca)}</p>
         <article class="verdict ${mosca.riskLevel}">${verdictInner(mosca)}</article>
+
+        <div class="scenario-block">
+          <h3>Across the plausible Q-Day range</h3>
+          <p class="small-note">Same X and Y, three Q-Day estimates. The lesson isn't the exact date — it's whether you survive the whole range.</p>
+          <div class="scenario-strip" id="scenario-strip">${createScenarioStrip()}</div>
+        </div>
+        ${checkpoint(
+          'data must stay secret 30 years, migration takes 5, Q-Day is ~10 years out — at risk?',
+          'Yes. 5 + 30 = 35, which is greater than 10. X + Y exceeds Z, so data encrypted during migration is still sensitive long after Q-Day.',
+        )}
 
         <article class="sector-context">${renderSectorContext()}</article>
       </section>
