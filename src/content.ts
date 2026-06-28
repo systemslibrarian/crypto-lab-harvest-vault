@@ -186,6 +186,26 @@ export const MISCONCEPTIONS: Misconception[] = [
   },
 ];
 
+export interface GlossaryTerm {
+  term: string;
+  def: string;
+}
+
+export const GLOSSARY: GlossaryTerm[] = [
+  { term: 'HNDL', def: 'Harvest Now, Decrypt Later — collecting encrypted data today to decrypt once quantum computers arrive.' },
+  { term: 'Q-Day', def: 'The (uncertain) day a cryptographically relevant quantum computer can break RSA/ECC. A probability range, not a fixed date.' },
+  { term: 'Mosca’s theorem', def: 'You have a problem when X (migration time) + Y (data sensitivity lifetime) exceeds Z (years until Q-Day).' },
+  { term: 'PQC', def: 'Post-Quantum Cryptography — algorithms designed to resist quantum attacks (e.g. ML-KEM, ML-DSA).' },
+  { term: 'PFS', def: 'Perfect Forward Secrecy — ephemeral per-session keys, so compromising a long-term key doesn’t expose past sessions.' },
+  { term: 'ML-KEM (FIPS 203)', def: 'NIST-standardized post-quantum key-encapsulation mechanism (formerly Kyber).' },
+  { term: 'ML-DSA (FIPS 204)', def: 'NIST-standardized post-quantum digital signature algorithm (formerly Dilithium).' },
+  { term: 'Shor’s algorithm', def: 'Quantum algorithm that efficiently breaks RSA and elliptic-curve crypto — the engine behind HNDL.' },
+  { term: 'Grover’s algorithm', def: 'Quantum search with only a quadratic speedup; it halves symmetric security, so AES-256 → ~128-bit (still safe).' },
+  { term: 'RSA / ECC', def: 'Public-key systems used for key exchange and signatures; both broken by Shor.' },
+  { term: 'ECDHE', def: 'Elliptic-Curve Diffie–Hellman Ephemeral — classical forward secrecy, but still quantum-vulnerable if the handshake is captured.' },
+  { term: 'Hybrid key exchange', def: 'Running a classical (X25519) and post-quantum (ML-KEM) exchange together, so an attacker must defeat both.' },
+];
+
 export interface ActionPhase {
   timeframe: string;
   items: string[];

@@ -10,6 +10,7 @@ import {
   SECTOR_RATIONALE,
   QUIZ,
   ACTION_PLAN,
+  GLOSSARY,
   CONFIDENCE_LABEL,
   CONFIDENCE_BLURB,
   type Confidence,
@@ -41,6 +42,95 @@ function createProtocolExamples(): string {
         <p>${ex.body}</p>
       </article>`,
   ).join('');
+}
+
+const clamp = (n: number, lo: number, hi: number): number => Math.min(Math.max(n, lo), hi);
+
+// Read shareable state (sector + X/Y/Z) from the URL on load.
+function parseStateFromUrl(): void {
+  const p = new URLSearchParams(window.location.search);
+  const sector = p.get('sector');
+  if (sector && (sectorOrder as string[]).includes(sector)) {
+    selectedSector = sector as SectorKey;
+    if (sector !== 'custom') {
+      migrationYears = SECTOR_PRESETS[sector].migrationYears;
+      sensitivityYears = SECTOR_PRESETS[sector].sensitivityYears;
+    }
+  }
+  const x = Number(p.get('x'));
+  const y = Number(p.get('y'));
+  const z = Number(p.get('z'));
+  if (Number.isFinite(x) && p.has('x')) {
+    migrationYears = clamp(Math.round(x), 1, 15);
+    selectedSector = 'custom';
+  }
+  if (Number.isFinite(y) && p.has('y')) {
+    sensitivityYears = clamp(Math.round(y), 1, 80);
+    selectedSector = 'custom';
+  }
+  if (Number.isFinite(z) && p.has('z')) {
+    qDayYears = clamp(Math.round(z), 1, 20);
+  }
+}
+
+// Reflect current state back into the URL so the view is shareable. replaceState
+// keeps it out of history (safe to call on every slider input).
+function syncUrl(): void {
+  const p = new URLSearchParams();
+  p.set('sector', selectedSector);
+  p.set('x', String(migrationYears));
+  p.set('y', String(sensitivityYears));
+  p.set('z', String(qDayYears));
+  window.history.replaceState(null, '', `${window.location.pathname}?${p.toString()}`);
+}
+
+function createProgressNav(): string {
+  const steps = STEP_MAP.map(
+    (s) => `<a class="step-link" data-step="${s.id}" href="#${s.id}">${s.label}</a>`,
+  ).join('');
+  return `<nav class="progress-nav" id="progress-nav" aria-label="Learning path"><div class="progress-track">${steps}</div></nav>`;
+}
+
+function createGlossary(): string {
+  return GLOSSARY.map(
+    (g) => `<div class="glossary-item"><dt>${g.term}</dt><dd>${g.def}</dd></div>`,
+  ).join('');
+}
+
+// Highlight the current step as the learner scrolls. Re-created per render; the
+// previous observer is disconnected first to avoid leaks across re-renders.
+function setupScrollSpy(): void {
+  scrollSpy?.disconnect();
+  const links = new Map<string, HTMLElement>();
+  document.querySelectorAll<HTMLElement>('.step-link').forEach((el) => {
+    const id = el.dataset.step;
+    if (id) links.set(id, el);
+  });
+  scrollSpy = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const id = entry.target.id;
+        links.forEach((el, key) => {
+          const active = key === id;
+          el.classList.toggle('current', active);
+          if (active) el.setAttribute('aria-current', 'true');
+          else el.removeAttribute('aria-current');
+        });
+      });
+    },
+    { rootMargin: '-15% 0px -80% 0px', threshold: 0 },
+  );
+  STEP_MAP.forEach((s) => {
+    const section = document.getElementById(s.id);
+    if (section) scrollSpy?.observe(section);
+  });
+}
+
+// Pin the in-page nav just below the (variable-height) shared header.
+function syncHeaderOffset(): void {
+  const header = document.querySelector<HTMLElement>('.cl-topbar');
+  document.documentElement.style.setProperty('--cl-h', `${header?.offsetHeight ?? 0}px`);
 }
 
 function createActionPlan(): string {
@@ -409,6 +499,17 @@ let sensitivityYears = SECTOR_PRESETS.healthcare.sensitivityYears;
 let qDayYears = 8;
 let matrixZ = 8;
 const quizAnswers: (number | null)[] = QUIZ.map(() => null);
+
+// The visible guided path: each step links to the section that answers its question.
+const STEP_MAP: { id: string; label: string }[] = [
+  { id: 'threat', label: '1 · Harvested' },
+  { id: 'whatbreaks', label: '2 · What breaks' },
+  { id: 'timeline', label: '3 · Why time' },
+  { id: 'mosca', label: '4 · Your risk' },
+  { id: 'mitigations', label: '5 · Mitigate' },
+  { id: 'quiz', label: '6 · Check' },
+];
+let scrollSpy: IntersectionObserver | null = null;
 // Index into timelineSorted (the array every consumer renders from), not the
 // unsorted source — otherwise the initial highlight points at the wrong event
 // the moment timeline.ts is reordered.
@@ -705,6 +806,8 @@ function refreshDynamic(): void {
 
   const brief = document.querySelector<HTMLElement>('#brief-pre');
   if (brief) brief.textContent = briefText();
+
+  syncUrl();
 }
 
 function renderApp(): void {
@@ -722,6 +825,7 @@ function renderApp(): void {
     }</button>
 
     <main>
+      ${createProgressNav()}
       <section class="panel hero-panel" id="threat">
         <h1>The breach has already happened.<br/>You just don't know it yet.</h1>
         <p class="lead">Adversaries are collecting your encrypted communications today. RSA and ECC cannot be broken now - but they will be. When quantum computers arrive, every stored ciphertext becomes readable.</p>
@@ -939,6 +1043,11 @@ function renderApp(): void {
         </div>
         <div class="evidence-list">${createEvidence()}</div>
       </section>
+
+      <section class="panel glossary-panel" id="glossary">
+        <h2>GLOSSARY</h2>
+        <dl class="glossary-list">${createGlossary()}</dl>
+      </section>
     </main>
 
     <footer>
@@ -1084,9 +1193,15 @@ function renderApp(): void {
       document.querySelector<HTMLElement>(`.matrix-z-btn[data-matrix-z="${matrixZ}"]`)?.focus();
     });
   });
+
+  syncHeaderOffset();
+  setupScrollSpy();
+  syncUrl();
 }
 
+parseStateFromUrl();
 renderApp();
+window.addEventListener('resize', syncHeaderOffset);
 
 // The live counter is auto-updating content (WCAG 2.2.2). Honour reduced-motion by
 // not running it at all — the markup shows a static rate instead (see counter-box).

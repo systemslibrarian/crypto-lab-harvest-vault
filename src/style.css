@@ -1297,6 +1297,86 @@ input[type='range'] {
   }
 }
 
+/* ---- sticky progress / guided-path nav ---- */
+.progress-nav {
+  position: sticky;
+  top: var(--cl-h, 0px);
+  z-index: 50;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 10px 10px;
+}
+
+.progress-track {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0.45rem 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.step-link {
+  flex: 0 0 auto;
+  text-decoration: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.step-link:hover {
+  color: var(--text);
+  border-color: var(--harvest);
+}
+
+.step-link.current {
+  color: var(--harvest);
+  border-color: var(--harvest);
+  background: rgba(0, 170, 255, 0.14);
+}
+
+/* So anchor jumps and matrix "select sector" don't land under the sticky bars. */
+section[id] {
+  scroll-margin-top: calc(var(--cl-h, 0px) + 3.5rem);
+}
+
+/* ---- glossary ---- */
+.glossary-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+}
+
+.glossary-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+}
+
+.glossary-item dt {
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.glossary-item dd {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (min-width: 760px) {
+  .glossary-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* ---- what to do monday ---- */
 .action-grid {
   display: grid;
@@ -1460,6 +1540,7 @@ input[type='range'] {
   .cl-topbar,
   .cl-skip-link,
   .skip-link,
+  .progress-nav,
   #theme-toggle,
   .no-print,
   footer {
