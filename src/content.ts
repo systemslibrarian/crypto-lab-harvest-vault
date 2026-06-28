@@ -122,6 +122,24 @@ export const THREAT_MODEL: ThreatRow[] = [
   },
 ];
 
+// Why each sector sits where it does on the risk matrix.
+export const SECTOR_RATIONALE: Record<string, string> = {
+  government:
+    'High sensitivity (decades) plus slow migration (legacy systems, certification, coalition interop) puts it deep in the danger zone.',
+  healthcare:
+    'Genomic and EHR data stay sensitive 50–80+ years while clinical ecosystems migrate slowly — the worst combination of long Y and large X.',
+  finance:
+    'Shorter sensitivity than health, but deal flow and strategy data plus fast-but-not-instant migration still cross the line.',
+  legal:
+    'Attorney–client privilege is effectively indefinite, so even moderate migration time keeps it firmly at risk.',
+  library:
+    'Patron-privacy obligations are long-lived and IT is under-resourced — a soft target with statutory duties.',
+  enterprise:
+    'Lower sensitivity (~10 years) and faster migration make it the closest to safe, but roadmaps still outlast an optimistic Z.',
+  personal:
+    'You can switch providers quickly (small X), but financial and health records keep multi-year sensitivity (Y).',
+};
+
 export interface ZScenario {
   label: string;
   year: number;

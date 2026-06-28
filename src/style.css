@@ -1108,6 +1108,65 @@ input[type='range'] {
   background: rgba(0, 170, 255, 0.06);
 }
 
+/* ---- interactive matrix controls ---- */
+.matrix-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.matrix-z {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.matrix-z-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  min-height: 40px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: var(--mono);
+}
+
+.matrix-z-btn.active {
+  background: rgba(0, 170, 255, 0.16);
+  border-color: var(--harvest);
+  color: var(--harvest);
+}
+
+.matrix-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+  border: 1px solid;
+}
+
+.legend-dot.at {
+  background: rgba(255, 34, 34, 0.2);
+  border-color: var(--danger);
+}
+
+.legend-dot.ok {
+  background: rgba(0, 204, 102, 0.2);
+  border-color: var(--safe);
+}
+
 /* ---- learning checkpoints ---- */
 .checkpoint {
   margin-top: 1rem;

@@ -7,6 +7,7 @@ import {
   PROTOCOL_EXAMPLES,
   MISCONCEPTIONS,
   Z_SCENARIOS,
+  SECTOR_RATIONALE,
   CONFIDENCE_LABEL,
   CONFIDENCE_BLURB,
   type Confidence,
@@ -38,6 +39,29 @@ function createProtocolExamples(): string {
         <p>${ex.body}</p>
       </article>`,
   ).join('');
+}
+
+function createMatrixZToggle(): string {
+  return [4, 8, 12]
+    .map(
+      (z) =>
+        `<button type="button" class="matrix-z-btn ${z === matrixZ ? 'active' : ''}" aria-pressed="${z === matrixZ}" data-matrix-z="${z}">Z = ${z} yr (${CURRENT_YEAR + z})</button>`,
+    )
+    .join('');
+}
+
+function createMatrixDots(): string {
+  return Object.entries(SECTOR_PRESETS)
+    .map(([key, preset]) => {
+      const x = Math.min(Math.max((preset.migrationYears / 10) * 100, 10), 95);
+      const y = Math.min(Math.max((preset.sensitivityYears / 50) * 100, 10), 95);
+      const risk = computeMosca(
+        { migrationYears: preset.migrationYears, sensitivityYears: preset.sensitivityYears, qDayYears: matrixZ },
+        CURRENT_YEAR,
+      );
+      return `<button class="matrix-dot ${risk.riskLevel}" style="left:${x}%;bottom:${y}%" type="button" data-matrix-sector="${key}" aria-label="${preset.label}: ${risk.atRisk ? 'at risk' : 'not at risk'} at Z=${matrixZ}. Activate to load into the calculator.">${preset.label}</button>`;
+    })
+    .join('');
 }
 
 function checkpoint(question: string, answer: string): string {
@@ -334,6 +358,7 @@ let selectedSector: SectorKey = 'healthcare';
 let migrationYears = SECTOR_PRESETS.healthcare.migrationYears;
 let sensitivityYears = SECTOR_PRESETS.healthcare.sensitivityYears;
 let qDayYears = 8;
+let matrixZ = 8;
 // Index into timelineSorted (the array every consumer renders from), not the
 // unsorted source — otherwise the initial highlight points at the wrong event
 // the moment timeline.ts is reordered.
@@ -712,27 +737,22 @@ function renderApp(): void {
       <section class="panel matrix-panel" id="mitigations">
         <h2>SECTOR RISK MATRIX + MITIGATIONS</h2>
         <div class="matrix-wrap">
-          <div class="matrix-grid" aria-label="Sector risk matrix">
-            <div class="matrix-axis-x">Migration Difficulty: Easy -> Hard</div>
-            <div class="matrix-axis-y">Data Sensitivity: Low -> High</div>
-            ${Object.entries(SECTOR_PRESETS)
-              .map(([key, preset]) => {
-                const x = Math.min(Math.max((preset.migrationYears / 10) * 100, 10), 95);
-                const y = Math.min(Math.max((preset.sensitivityYears / 50) * 100, 10), 95);
-                const risk = computeMosca(
-                  {
-                    migrationYears: preset.migrationYears,
-                    sensitivityYears: preset.sensitivityYears,
-                    qDayYears: 8,
-                  },
-                  CURRENT_YEAR,
-                );
-                return `<button class="matrix-dot ${risk.riskLevel}" style="left:${x}%;bottom:${y}%" type="button" data-matrix-sector="${key}">${preset.label}</button>`;
-              })
-              .join('')}
+          <div class="matrix-controls">
+            <span class="small-note">Q-Day assumption:</span>
+            <div class="matrix-z" role="group" aria-label="Q-Day assumption for the matrix">${createMatrixZToggle()}</div>
+          </div>
+          <div class="matrix-grid" id="matrix-grid" role="group" aria-label="Sector risk matrix: horizontal axis migration difficulty, vertical axis data sensitivity">
+            <div class="matrix-axis-x">Migration Difficulty: Easy → Hard</div>
+            <div class="matrix-axis-y">Data Sensitivity: Low → High</div>
+            ${createMatrixDots()}
+          </div>
+          <div class="matrix-legend small-note">
+            <span><span class="legend-dot at"></span> at risk (X + Y &gt; Z)</span>
+            <span><span class="legend-dot ok"></span> not at risk</span>
+            <span>Move the Q-Day slider above to watch dots cross between states.</span>
           </div>
           <article class="matrix-info" id="matrix-info" aria-live="polite">
-            Hover or click a sector dot to view its default Mosca profile at Z = 8 years.
+            Hover or focus a sector dot to see its profile at the selected Q-Day; activate it to load that sector into the calculator above.
           </article>
         </div>
 
@@ -840,22 +860,36 @@ function renderApp(): void {
       const key = dot.dataset.matrixSector as keyof typeof SECTOR_PRESETS;
       const preset = SECTOR_PRESETS[key];
       const result = computeMosca(
-        {
-          migrationYears: preset.migrationYears,
-          sensitivityYears: preset.sensitivityYears,
-          qDayYears: 8,
-        },
+        { migrationYears: preset.migrationYears, sensitivityYears: preset.sensitivityYears, qDayYears: matrixZ },
         CURRENT_YEAR,
       );
       const info = document.querySelector<HTMLElement>('#matrix-info');
       if (info) {
-        info.textContent = `${preset.label}: X=${result.X}, Y=${result.Y}, Z=8 => X+Y=${result.XplusY}. Risk: ${result.riskLevel.toUpperCase()} (${result.atRisk ? 'at risk' : 'not at risk'}).`;
+        info.innerHTML = `<strong>${preset.label}</strong> — X=${result.X}, Y=${result.Y}, Z=${matrixZ} ⇒ X+Y=${result.XplusY}. <strong>${result.riskLevel.toUpperCase()}</strong> (${result.atRisk ? 'at risk' : 'not at risk'}).<br><span class="small-note">${SECTOR_RATIONALE[key] ?? ''} Activate to load this sector into the calculator.</span>`;
       }
     };
 
     dot.addEventListener('mouseenter', show);
     dot.addEventListener('focus', show);
-    dot.addEventListener('click', show);
+    dot.addEventListener('click', () => {
+      const key = dot.dataset.matrixSector as keyof typeof SECTOR_PRESETS;
+      selectedSector = key;
+      migrationYears = SECTOR_PRESETS[key].migrationYears;
+      sensitivityYears = SECTOR_PRESETS[key].sensitivityYears;
+      renderApp();
+      document
+        .querySelector<HTMLElement>('#mosca')
+        ?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+      document.querySelector<HTMLElement>(`.sector-tab[data-sector="${key}"]`)?.focus();
+    });
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.matrix-z-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      matrixZ = Number(btn.dataset.matrixZ);
+      renderApp();
+      document.querySelector<HTMLElement>(`.matrix-z-btn[data-matrix-z="${matrixZ}"]`)?.focus();
+    });
   });
 }
 
