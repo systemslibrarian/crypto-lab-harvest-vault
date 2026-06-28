@@ -16,6 +16,7 @@ html[data-theme='dark'] {
   --quantum: #ff00ff;
   --panel: rgba(10, 16, 24, 0.82);
   --focus: #9ee4ff;
+  --here: #f0cf7b;
 }
 
 html[data-theme='light'] {
@@ -31,6 +32,7 @@ html[data-theme='light'] {
   --quantum: #a700b8;
   --panel: rgba(255, 255, 255, 0.86);
   --focus: #08466c;
+  --here: #7a5f00;
 }
 
 * {
@@ -147,7 +149,7 @@ p {
 .act-strip {
   position: relative;
   display: grid;
-  min-height: 164px;
+  min-height: 230px;
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
@@ -156,11 +158,254 @@ p {
 .act-card {
   position: absolute;
   inset: 0;
-  padding: 1rem;
+  padding: 1rem clamp(1rem, 3vw, 1.6rem);
   display: grid;
-  gap: 0.5rem;
-  align-content: center;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.6rem;
+  align-content: stretch;
   opacity: 0;
+}
+
+.act-card h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.12em;
+}
+
+.act-when {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+
+.act-cap {
+  color: var(--text);
+  font-size: 0.86rem;
+  opacity: 0.92;
+}
+
+/* ---- shared scene scaffolding ---- */
+.scene {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(0.6rem, 3vw, 2rem);
+  min-height: 96px;
+}
+
+.scene .node {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.ico {
+  width: 42px;
+  height: 42px;
+}
+
+/* ---- Act 1: harvest — locked packets stream into the adversary store ---- */
+.wire {
+  position: relative;
+  flex: 1 1 auto;
+  height: 40px;
+  align-self: center;
+}
+
+.wire::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 2px dashed color-mix(in srgb, var(--harvest) 55%, transparent);
+}
+
+.pkt {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(-50%, -50%);
+  animation: pkt-flow 2.4s linear infinite;
+}
+
+.pkt .ico {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.pkt-0 { animation-delay: 0s; }
+.pkt-1 { animation-delay: 0.6s; }
+.pkt-2 { animation-delay: 1.2s; }
+.pkt-3 { animation-delay: 1.8s; }
+
+@keyframes pkt-flow {
+  0% { left: 0; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* ---- Act 2: wait — a vault of stored ciphertext while the years tick ---- */
+.scene-wait {
+  justify-content: space-around;
+}
+
+.vault {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+  border-radius: 8px;
+  background: rgba(255, 170, 0, 0.06);
+}
+
+.vchip .ico {
+  width: 24px;
+  height: 24px;
+  display: block;
+  animation: vchip-pulse 2.2s ease-in-out infinite;
+}
+
+.vchip-1 .ico { animation-delay: 0.2s; }
+.vchip-2 .ico { animation-delay: 0.4s; }
+.vchip-3 .ico { animation-delay: 0.6s; }
+.vchip-4 .ico { animation-delay: 0.8s; }
+.vchip-5 .ico { animation-delay: 1s; }
+
+@keyframes vchip-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.year-ticker {
+  height: 2.4rem;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 1.9rem;
+  line-height: 2.4rem;
+  color: var(--warning);
+}
+
+.year-reel {
+  display: grid;
+  animation: year-tick 5s steps(9) infinite;
+}
+
+.year-reel span {
+  height: 2.4rem;
+}
+
+@keyframes year-tick {
+  from { transform: translateY(0); }
+  to { transform: translateY(-21.6rem); }
+}
+
+/* ---- Act 3: decrypt — the lock opens, ciphertext resolves to plaintext ---- */
+.scene-decrypt {
+  justify-content: space-around;
+}
+
+.crack {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+}
+
+.lock-swap {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  color: var(--danger);
+}
+
+.lock-swap .closed,
+.lock-swap .open {
+  position: absolute;
+  inset: 0;
+}
+
+.lock-swap .closed .ico,
+.lock-swap .open .ico {
+  width: 42px;
+  height: 42px;
+}
+
+.lock-swap .closed { animation: swap-out 3s ease-in-out infinite; }
+.lock-swap .open { animation: swap-in 3s ease-in-out infinite; }
+
+@keyframes swap-out {
+  0%, 40% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+@keyframes swap-in {
+  0%, 40% { opacity: 0; transform: scale(0.85); }
+  55%, 100% { opacity: 1; transform: scale(1); }
+}
+
+.reveal {
+  position: relative;
+  display: inline-grid;
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.18em;
+}
+
+.reveal .cipher,
+.reveal .plain {
+  grid-area: 1 / 1;
+  text-align: center;
+}
+
+.reveal .cipher { color: var(--harvest); animation: swap-out 3s ease-in-out infinite; }
+.reveal .plain { color: var(--danger); font-weight: 700; animation: swap-in 3s ease-in-out infinite; }
+
+/* ---- reduced-motion / no-JS static fallback ---- */
+.act-static {
+  display: none;
+  padding: 1rem;
+  align-content: center;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0.8rem;
+  color: var(--muted);
+}
+
+.act-static .step {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.act-static .step strong {
+  font-family: var(--mono);
+  color: var(--text);
+  letter-spacing: 0.08em;
+}
+
+.act-static .step span {
+  font-size: 0.8rem;
+}
+
+.act-static .arrow {
+  align-self: center;
+  font-size: 1.4rem;
+  color: var(--harvest);
 }
 
 .act-1 {
@@ -179,13 +424,6 @@ p {
   background: rgba(255, 34, 34, 0.13);
   color: var(--danger);
   animation: cycle-three 8s linear infinite;
-}
-
-.act-static {
-  display: none;
-  padding: 1rem;
-  align-content: center;
-  color: var(--muted);
 }
 
 .counter-box {
@@ -237,11 +475,14 @@ p {
   font-weight: bold;
   padding: 0.4rem;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  /* Near-opaque dark reds: white text clears 4.5:1 here in both themes. The old
+     translucent fill let the page background bleed through (white-on-pink failed
+     in light theme); text-shadow is not counted toward WCAG contrast. */
   background: linear-gradient(
     to right,
-    rgba(255, 34, 34, 0.25),
-    rgba(255, 34, 34, 0.65),
-    rgba(255, 34, 34, 0.25)
+    rgba(140, 12, 12, 0.9),
+    rgba(176, 18, 18, 0.96),
+    rgba(140, 12, 12, 0.9)
   );
 }
 
@@ -255,7 +496,7 @@ p {
 }
 
 .you-are-here {
-  color: #f0cf7b;
+  color: var(--here);
 }
 
 .you-are-here::after {
@@ -265,7 +506,7 @@ p {
   left: 50%;
   transform: translateX(-50%);
   height: 250px;
-  border-left: 3px solid #f0cf7b;
+  border-left: 3px solid var(--here);
 }
 
 .qday-estimate-marker {
@@ -380,23 +621,29 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
   font-size: 0.76rem;
-  color: #fff;
+  font-weight: 600;
+  /* Dark ink on fixed bright fills — passes >=5:1 in BOTH themes. White text on
+     these hues failed WCAG 1.4.3 (e.g. white on amber ~1.9:1). Fills are
+     intentionally theme-independent so the contrast guarantee always holds. */
+  color: #0b1512;
   white-space: nowrap;
   padding: 0 0.2rem;
 }
 
 .harvested-past {
-  background: var(--harvest);
+  background: #2bb3ff;
 }
 
 .harvested-now {
-  background: var(--warning);
+  background: #ffb300;
 }
 
 .harvested-qday {
-  min-width: 92px;
-  background: var(--danger);
+  background: #ff3b3b;
 }
 
 .sector-tabs {
@@ -493,6 +740,9 @@ input[type='range'] {
   min-height: 340px;
   border: 1px solid var(--line);
   border-radius: 10px;
+  /* Clip edge dots so they can't spill past the panel and trigger horizontal
+     page scroll on narrow screens (WCAG 1.4.10). */
+  overflow: hidden;
   background: linear-gradient(90deg, rgba(0, 204, 102, 0.08), rgba(255, 34, 34, 0.13));
 }
 
@@ -579,6 +829,84 @@ input[type='range'] {
   gap: 0.45rem;
 }
 
+.breaks-grid {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.breaks-col {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+.breaks-col h3 {
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+}
+
+.breaks-col.broken {
+  border-color: var(--danger);
+  background: rgba(255, 34, 34, 0.08);
+}
+
+.breaks-col.broken h3 {
+  color: var(--danger);
+}
+
+.breaks-col.safe {
+  border-color: var(--safe);
+  background: rgba(0, 204, 102, 0.08);
+}
+
+.breaks-col.safe h3 {
+  color: var(--safe);
+}
+
+.breaks-sub {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.breaks-col ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.breaks-col li {
+  font-family: var(--mono);
+  font-size: 0.92rem;
+}
+
+.breaks-col li span {
+  display: block;
+  font-family: var(--sans);
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0;
+}
+
+.breaks-foot {
+  font-size: 0.83rem;
+  opacity: 0.92;
+}
+
+.breaks-note {
+  margin-top: 0.9rem;
+}
+
+@media (min-width: 768px) {
+  .breaks-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 footer {
   margin-top: 1rem;
   border: 1px solid var(--line);
@@ -590,9 +918,37 @@ footer {
 
 button:focus-visible,
 input:focus-visible,
-summary:focus-visible {
+summary:focus-visible,
+a:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Light-theme act accents: the dark-on-light defaults (--harvest/--warning) fall
+   below 4.5:1 at this text size, so darken them for sighted low-vision users.
+   (The strip is role="img"; SR users get the aria-label regardless.) */
+html[data-theme='light'] .act-1 {
+  color: #015a8c;
+}
+
+html[data-theme='light'] .act-2 {
+  color: #8a4b00;
+}
+
+html[data-theme='light'] .act-3 {
+  color: #b00f0f;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @keyframes cycle-one {
@@ -665,19 +1021,17 @@ summary:focus-visible {
 
   .matrix-dot {
     max-width: 118px;
-    min-height: 36px;
+    min-height: 44px;
   }
 
-  .harvest-bar {
-    flex-wrap: wrap;
-  }
-
+  /* Keep the segments proportional on mobile too (don't force equal thirds — that
+     would misrepresent the data). Labels in tiny segments clip; the heading and
+     the bar's aria-label still convey the meaning. */
   .harvested-past,
   .harvested-now,
   .harvested-qday {
-    min-width: 0;
-    flex: 1 1 auto;
-    padding: 0.3rem;
+    font-size: 0.68rem;
+    padding: 0.3rem 0.15rem;
   }
 
   .sector-tabs {
@@ -707,7 +1061,18 @@ summary:focus-visible {
     opacity: 0;
   }
 
+  .pkt,
+  .vchip .ico,
+  .year-reel,
+  .lock-swap .closed,
+  .lock-swap .open,
+  .reveal .cipher,
+  .reveal .plain {
+    animation: none;
+  }
+
   .act-static {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
   }
 }

@@ -1,5 +1,5 @@
 import './style.css';
-import { computeMosca, SECTOR_PRESETS } from './mosca';
+import { computeMosca, SECTOR_PRESETS, type MoscaResult } from './mosca';
 import { TIMELINE_EVENTS, type TimelineEvent } from './timeline';
 
 type SectorKey = keyof typeof SECTOR_PRESETS | 'custom';
@@ -167,7 +167,71 @@ const mitigationCards = [
   },
 ];
 
-const persistedTheme = localStorage.getItem('cv-theme');
+// Small inline SVG glyphs for the three-act hero scenes. All use currentColor so
+// they inherit each act's accent and adapt to light/dark themes automatically.
+const ICON = {
+  doc: '<svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M6 2h8l4 4v16H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M14 2v4h4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 11h7M8.5 14h7M8.5 17h4" stroke="currentColor" stroke-width="1.4"/></svg>',
+  drive: '<svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="11" width="18" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3" y="18" width="18" height="3.4" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="6.5" r="1" fill="currentColor"/><circle cx="7" cy="13.5" r="1" fill="currentColor"/></svg>',
+  qpu: '<svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M12 2v3M7 5h10M8 5l-1 4h10l-1-4M7.5 9h9l-1.2 4H8.7zM9 13l-.8 5h7.6L15 13M10.5 18v3M13.5 18v3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="5.5" y="10" width="13" height="9" rx="2" fill="currentColor"/></svg>',
+  unlock: '<svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M8 10V7a4 4 0 0 1 7.7-1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="5.5" y="10" width="13" height="9" rx="2" fill="currentColor"/></svg>',
+};
+
+function createActStrip(): string {
+  const packets = [0, 1, 2, 3].map((i) => `<span class="pkt pkt-${i}">${ICON.lock}</span>`).join('');
+  const vaultChips = [0, 1, 2, 3, 4, 5].map((i) => `<span class="vchip vchip-${i}">${ICON.lock}</span>`).join('');
+  const years = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035]
+    .map((y) => `<span>${y}</span>`)
+    .join('');
+
+  return `
+    <div class="act-strip" role="img" aria-label="Three-act HNDL attack: Act 1, encrypted traffic is copied and stored today. Act 2, it waits in storage for years. Act 3, at Q-Day a quantum computer recovers the keys and every stored message becomes readable.">
+      <div class="act-card act-1">
+        <h3>ACT 1 · HARVEST <span class="act-when">2026 — happening now</span></h3>
+        <div class="scene scene-harvest">
+          <div class="node">${ICON.doc}<span>your traffic</span></div>
+          <div class="wire" aria-hidden="true">${packets}</div>
+          <div class="node">${ICON.drive}<span>adversary store</span></div>
+        </div>
+        <p class="act-cap">Encrypted packets are copied off the wire and stored. Unreadable today — kept anyway.</p>
+      </div>
+
+      <div class="act-card act-2">
+        <h3>ACT 2 · WAIT <span class="act-when">years pass</span></h3>
+        <div class="scene scene-wait">
+          <div class="vault" aria-hidden="true">${vaultChips}</div>
+          <div class="year-ticker" aria-hidden="true"><div class="year-reel">${years}</div></div>
+        </div>
+        <p class="act-cap">The ciphertext sits in storage. The lock holds — but waiting costs the attacker nothing.</p>
+      </div>
+
+      <div class="act-card act-3">
+        <h3>ACT 3 · DECRYPT <span class="act-when">Q-Day</span></h3>
+        <div class="scene scene-decrypt">
+          <div class="node node-qpu">${ICON.qpu}<span>quantum computer</span></div>
+          <div class="crack" aria-hidden="true">
+            <span class="lock-swap"><span class="closed">${ICON.lock}</span><span class="open">${ICON.unlock}</span></span>
+            <span class="reveal"><span class="cipher">●●●●●●●●</span><span class="plain">PLAINTEXT</span></span>
+          </div>
+        </div>
+        <p class="act-cap">Shor's algorithm recovers the keys. Every harvested message — yours included — becomes readable at once.</p>
+      </div>
+
+      <div class="act-static" aria-hidden="true">
+        <span class="step"><strong>1 · HARVEST</strong><span>copied &amp; stored today</span></span>
+        <span class="arrow">→</span>
+        <span class="step"><strong>2 · WAIT</strong><span>years in storage</span></span>
+        <span class="arrow">→</span>
+        <span class="step"><strong>3 · DECRYPT</strong><span>readable at Q-Day</span></span>
+      </div>
+    </div>
+  `;
+}
+
+// Match the boot script's precedence: the shared header writes 'theme', this lab
+// historically wrote 'cv-theme'. Honour 'theme' first so we never override the
+// header toggle's most recent choice with a stale 'cv-theme' value.
+const persistedTheme = localStorage.getItem('theme') ?? localStorage.getItem('cv-theme');
 if (persistedTheme === 'dark' || persistedTheme === 'light') {
   document.documentElement.setAttribute('data-theme', persistedTheme);
 }
@@ -178,16 +242,24 @@ if (!appRoot) {
 }
 const app: HTMLDivElement = appRoot;
 
-let selectedSector: SectorKey = 'healthcare';
-let migrationYears = SECTOR_PRESETS.healthcare.migrationYears;
-let sensitivityYears = SECTOR_PRESETS.healthcare.sensitivityYears;
-let qDayYears = 8;
-let selectedEventIndex = TIMELINE_EVENTS.findIndex((event) => event.label.includes('YOU ARE HERE'));
-let storageCounterTb = 0;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const timelineSorted = [...TIMELINE_EVENTS].sort((a, b) => a.year - b.year);
 const timelineMin = timelineSorted[0]?.year ?? 2013;
 const timelineMax = timelineSorted[timelineSorted.length - 1]?.year ?? 2035;
+
+let selectedSector: SectorKey = 'healthcare';
+let migrationYears = SECTOR_PRESETS.healthcare.migrationYears;
+let sensitivityYears = SECTOR_PRESETS.healthcare.sensitivityYears;
+let qDayYears = 8;
+// Index into timelineSorted (the array every consumer renders from), not the
+// unsorted source — otherwise the initial highlight points at the wrong event
+// the moment timeline.ts is reordered.
+let selectedEventIndex = Math.max(
+  timelineSorted.findIndex((event) => event.label.includes('YOU ARE HERE')),
+  0,
+);
+let storageCounterTb = 0;
 
 function getEventPosition(year: number): number {
   return ((year - timelineMin) / (timelineMax - timelineMin)) * 100;
@@ -200,6 +272,8 @@ function getTheme(): 'dark' | 'light' {
 
 function setTheme(theme: 'dark' | 'light'): void {
   document.documentElement.setAttribute('data-theme', theme);
+  // Write both keys so this lab and the shared header stay in sync.
+  localStorage.setItem('theme', theme);
   localStorage.setItem('cv-theme', theme);
 }
 
@@ -228,7 +302,7 @@ function createSectorTabs(): string {
   return sectorOrder
     .map((sector) => {
       const isActive = selectedSector === sector;
-      return `<button class="sector-tab ${isActive ? 'active' : ''}" type="button" role="tab" aria-selected="${isActive}" data-sector="${sector}">${sectorTitles[sector]}</button>`;
+      return `<button class="sector-tab ${isActive ? 'active' : ''}" type="button" aria-pressed="${isActive}" data-sector="${sector}">${sectorTitles[sector]}</button>`;
     })
     .join('');
 }
@@ -239,14 +313,16 @@ function createTimelineMarkers(): string {
       const row = timelineRow(event);
       const cls = categoryClass(event);
       const pos = getEventPosition(event.year);
-      const active = index === selectedEventIndex ? 'active' : '';
+      const isActive = index === selectedEventIndex;
+      // Selection pattern (not disclosure): the detail panel is always visible and
+      // only its content swaps, so aria-current is correct, not aria-expanded.
       return `
         <button
           type="button"
-          class="timeline-event ${row} ${cls} ${active}"
+          class="timeline-event ${row} ${cls} ${isActive ? 'active' : ''}"
           data-event-index="${index}"
           style="left:${pos}%;"
-          aria-expanded="${active ? 'true' : 'false'}"
+          ${isActive ? 'aria-current="true"' : ''}
           aria-controls="timeline-details"
         >
           <span class="event-year">${event.year}</span>
@@ -262,7 +338,7 @@ function createTimelineList(): string {
     .map((event, index) => {
       const cls = categoryClass(event);
       const isActive = index === selectedEventIndex;
-      return `<button type="button" class="timeline-list-event ${cls} ${isActive ? 'active' : ''}" data-event-index="${index}" aria-expanded="${isActive}" aria-controls="timeline-details"><span>${event.year}</span>${event.label}</button>`;
+      return `<button type="button" class="timeline-list-event ${cls} ${isActive ? 'active' : ''}" data-event-index="${index}" ${isActive ? 'aria-current="true"' : ''} aria-controls="timeline-details"><span>${event.year}</span>${event.label}</button>`;
     })
     .join('');
 }
@@ -279,7 +355,7 @@ function createMitigationCards(): string {
 function renderSectorContext(): string {
   if (selectedSector === 'custom') {
     return `
-      <h4>CUSTOM CONTEXT</h4>
+      <h3>CUSTOM CONTEXT</h3>
       <p>Use the sliders to model your own environment and sensitivity horizon. The risk condition remains fixed: X + Y > Z means the data is at risk.</p>
       <ul>
         <li>Model your real migration timeline, not your best case</li>
@@ -291,10 +367,104 @@ function renderSectorContext(): string {
 
   const data = sectorContext[selectedSector];
   return `
-    <h4>${data.heading}</h4>
+    <h3>${data.heading}</h3>
     ${data.body.map((line) => `<p>${line}</p>`).join('')}
     <ul>${data.bullets.map((line) => `<li>${line}</li>`).join('')}</ul>
   `;
+}
+
+function harvestBarInner(qDayYearAbsolute: number): string {
+  // One shared scale from 2013 to a horizon just past Q-Day, so all three
+  // segments are proportional and sum to 100% — no fixed-width fudge factor.
+  const horizon = Math.max(qDayYearAbsolute + 5, timelineMax);
+  const total = Math.max(horizon - timelineMin, 1);
+  const pastPct = ((CURRENT_YEAR - timelineMin) / total) * 100;
+  const nowPct = ((qDayYearAbsolute - CURRENT_YEAR) / total) * 100;
+  const decryptPct = ((horizon - qDayYearAbsolute) / total) * 100;
+  return `
+    <div class="harvested-past" style="width:${Math.max(pastPct, 0)}%">already harvested</div>
+    <div class="harvested-now" style="width:${Math.max(nowPct, 0)}%">being harvested now</div>
+    <div class="harvested-qday" style="width:${Math.max(decryptPct, 0)}%">decryptable at Q-Day</div>
+  `;
+}
+
+// One short line for the polite live region — announcing the full verdict block on
+// every slider 'input' would flood a screen reader. This coalesces to the latest.
+function moscaStatus(mosca: MoscaResult): string {
+  return `${mosca.atRisk ? 'At risk' : 'Not at risk'}, ${mosca.riskLevel}. X plus Y is ${mosca.XplusY} years, Z is ${mosca.Z} years.`;
+}
+
+function verdictInner(mosca: MoscaResult): string {
+  const neededStart = mosca.dataExposureYear - mosca.X;
+  const yearsBehind = CURRENT_YEAR - neededStart;
+  const sign = mosca.XplusY > mosca.Z ? '>' : mosca.XplusY === mosca.Z ? '=' : '<';
+  // Data encrypted *today* has sensitivity Y, so it outlives Q-Day by Y - Z.
+  // The full X + Y - Z margin applies to data encrypted at the END of migration.
+  const todayMargin = mosca.Y - mosca.Z;
+  const atRiskBody = mosca.atRisk
+    ? `Data encrypted during your ${mosca.X}-year migration stays sensitive up to ${mosca.riskMargin} year(s) past Q-Day${
+        todayMargin > 0 ? `; data encrypted today alone outlives Q-Day by ${todayMargin} year(s)` : ''
+      }. An adversary collecting now can read it later.`
+    : `Current buffer: migration and data sensitivity both complete ${Math.abs(mosca.riskMargin)} year(s) before this Q-Day estimate.`;
+  return `
+    <p class="math">X + Y = ${mosca.X} + ${mosca.Y} = ${mosca.XplusY} years</p>
+    <p class="math">Z = ${mosca.Z} years</p>
+    <p class="math">${mosca.XplusY} ${sign} ${mosca.Z}</p>
+    <p class="verdict-line">${
+      mosca.atRisk
+        ? `AT RISK - ${mosca.riskLevel.toUpperCase()}`
+        : `NOT AT RISK - ${mosca.riskLevel.toUpperCase()}`
+    }</p>
+    <p>${atRiskBody}</p>
+    <p>Q-Day estimate year: ${mosca.dataExposureYear}. To finish by then, migration needed to start by ${neededStart}.</p>
+    <p>${
+      yearsBehind > 0
+        ? `You are already ${yearsBehind} year(s) behind this schedule.`
+        : 'You are still inside the migration window if execution starts now.'
+    }</p>
+  `;
+}
+
+// Update only the parts of the DOM that depend on the X/Y/Z sliders, WITHOUT
+// rebuilding the whole app — rebuilding would destroy the <input> the user is
+// dragging (breaking continuous drag, badly so on touch/mobile).
+function refreshDynamic(): void {
+  const qDayYearAbsolute = CURRENT_YEAR + qDayYears;
+  const mosca = computeMosca({ migrationYears, sensitivityYears, qDayYears }, CURRENT_YEAR);
+
+  const setText = (sel: string, value: string): void => {
+    const el = document.querySelector<HTMLElement>(sel);
+    if (el) el.textContent = value;
+  };
+  setText('#x-value', String(migrationYears));
+  setText('#y-value', String(sensitivityYears));
+  setText('#z-value', String(qDayYears));
+  setText('#z-year', String(qDayYearAbsolute));
+
+  const verdict = document.querySelector<HTMLElement>('.verdict');
+  if (verdict) {
+    verdict.className = `verdict ${mosca.riskLevel}`;
+    verdict.innerHTML = verdictInner(mosca);
+  }
+  setText('#mosca-status', moscaStatus(mosca));
+
+  const sectorContext = document.querySelector<HTMLElement>('.sector-context');
+  if (sectorContext) sectorContext.innerHTML = renderSectorContext();
+
+  document.querySelectorAll<HTMLButtonElement>('.sector-tab').forEach((button) => {
+    const active = button.dataset.sector === selectedSector;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+
+  const marker = document.querySelector<HTMLElement>('#qday-marker');
+  if (marker) {
+    marker.style.left = `${getEventPosition(qDayYearAbsolute)}%`;
+    marker.textContent = `Q-Day estimate (${qDayYearAbsolute})`;
+  }
+
+  const bar = document.querySelector<HTMLElement>('#harvest-bar');
+  if (bar) bar.innerHTML = harvestBarInner(qDayYearAbsolute);
 }
 
 function renderApp(): void {
@@ -303,22 +473,8 @@ function renderApp(): void {
   const nowPos = getEventPosition(CURRENT_YEAR);
   const bandStart = getEventPosition(2028);
   const bandEnd = getEventPosition(2035);
-  const totalWindow = Math.max(qDayYearAbsolute - timelineMin, 1);
-  const harvestedPast = ((CURRENT_YEAR - timelineMin) / totalWindow) * 100;
-  const harvestedNow = ((qDayYearAbsolute - CURRENT_YEAR) / totalWindow) * 100;
 
-  const mosca = computeMosca(
-    {
-      migrationYears,
-      sensitivityYears,
-      qDayYears,
-    },
-    CURRENT_YEAR,
-  );
-
-  const neededStart = mosca.dataExposureYear - mosca.X;
-  const yearsBehind = CURRENT_YEAR - neededStart;
-  const sign = mosca.XplusY > mosca.Z ? '>' : mosca.XplusY === mosca.Z ? '=' : '<';
+  const mosca = computeMosca({ migrationYears, sensitivityYears, qDayYears }, CURRENT_YEAR);
 
   app.innerHTML = `
     <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">${
@@ -331,32 +487,49 @@ function renderApp(): void {
         <p class="lead">Adversaries are collecting your encrypted communications today. RSA and ECC cannot be broken now - but they will be. When quantum computers arrive, every stored ciphertext becomes readable.</p>
         <p class="lead">This is Harvest Now, Decrypt Later. It is not a future threat. It is a present collection strategy.</p>
 
-        <div class="act-strip" role="region" aria-roledescription="animation" aria-label="Three-act HNDL attack model: Harvest, Wait, Decrypt">
-          <div class="act-card act-1">
-            <h3>ACT 1: HARVEST (2026)</h3>
-            <p>Your data -> [padlock] -> adversary collector</p>
-          </div>
-          <div class="act-card act-2">
-            <h3>ACT 2: WAIT</h3>
-            <p>[vault rack] years ticking: 2026...2027...2028...</p>
-          </div>
-          <div class="act-card act-3">
-            <h3>ACT 3: DECRYPT (Q-DAY)</h3>
-            <p>[quantum computer] -> keys recovered -> plaintext exposed</p>
-          </div>
-          <div class="act-static" aria-hidden="true">
-            <p><strong>HARVEST</strong> -> <strong>WAIT</strong> -> <strong>DECRYPT</strong></p>
-          </div>
-        </div>
+        ${createActStrip()}
 
         <div class="counter-box">
-          <p>Data encrypted with RSA/ECC since this page loaded:</p>
+          ${
+            prefersReducedMotion
+              ? `<p>RSA/ECC-encrypted traffic harvestable worldwide, every second:</p>
+          <p class="counter-value">~${TRAFFIC_TB_PER_SECOND} TB / second</p>`
+              : `<p>Data encrypted with RSA/ECC since this page loaded:</p>
           <p class="counter-value"><span id="traffic-counter">${storageCounterTb.toLocaleString('en-US', {
             maximumFractionDigits: 0,
-          })}</span> TB</p>
+          })}</span> TB</p>`
+          }
           <p>Estimated storage cost for a nation-state actor: $0.002</p>
           <p class="small-note">Source: Global internet traffic ~5 Exabytes/day. RSA/ECC: ~40% of HTTPS. Illustrative - for scale.</p>
         </div>
+      </section>
+
+      <section class="panel breaks-panel" id="whatbreaks">
+        <h2>WHAT QUANTUM BREAKS — AND WHAT IT DOESN'T</h2>
+        <p class="lead">The harvest does not attack the cipher protecting your session. It attacks the <strong>handshake</strong> that established the session key. Break the handshake, recover the key, read everything underneath. That is why "we use AES-256" is not an answer.</p>
+        <div class="breaks-grid">
+          <article class="breaks-col broken">
+            <h3>BROKEN — by Shor's algorithm</h3>
+            <p class="breaks-sub">Public-key crypto. Exponential speedup collapses it to effectively zero security.</p>
+            <ul>
+              <li>RSA-2048 <span>key transport &amp; signatures</span></li>
+              <li>ECC P-256 / secp256k1 <span>ECDH, ECDSA</span></li>
+              <li>Diffie–Hellman, ECDHE <span>the TLS handshake</span></li>
+            </ul>
+            <p class="breaks-foot">This is the HNDL target. The handshake is recorded today and cracked at Q-Day.</p>
+          </article>
+          <article class="breaks-col safe">
+            <h3>SURVIVES — only dented by Grover</h3>
+            <p class="breaks-sub">Symmetric crypto &amp; hashes. Quadratic speedup only — answered by doubling the key.</p>
+            <ul>
+              <li>AES-256 <span>→ 128-bit security. Safe.</span></li>
+              <li>SHA-256 / SHA-512 <span>→ still collision-resistant</span></li>
+              <li>ChaCha20-Poly1305 <span>→ symmetric, safe</span></li>
+            </ul>
+            <p class="breaks-foot">Grover halves the bits of security, not the data. AES-256 lands at 128-bit — still out of reach.</p>
+          </article>
+        </div>
+        <p class="breaks-note small-note">So why doesn't symmetric safety save you? Because that AES session key was delivered by the public-key handshake. Quantum breaks the handshake, recovers the AES key, and decrypts the session — even though AES itself was never broken. See <strong>crypto-lab-grover</strong> for the symmetric story and <strong>crypto-lab-shor</strong> for the attack itself.</p>
       </section>
 
       <section class="panel timeline-panel" id="timeline">
@@ -370,7 +543,7 @@ function renderApp(): void {
             <div class="you-are-here" style="left:${nowPos}%">
               <span>YOU ARE HERE</span>
             </div>
-            <div class="qday-estimate-marker" style="left:${qDayPos}%">Q-Day estimate (${qDayYearAbsolute})</div>
+            <div class="qday-estimate-marker" id="qday-marker" style="left:${qDayPos}%">Q-Day estimate (${qDayYearAbsolute})</div>
             ${createTimelineMarkers()}
           </div>
         </div>
@@ -383,17 +556,13 @@ function renderApp(): void {
 
         <div class="harvest-bar-wrap">
           <h3>Harvested Data Accumulation</h3>
-          <div class="harvest-bar" role="img" aria-label="Data accumulation from 2013 through Q-Day">
-            <div class="harvested-past" style="width:${Math.max(harvestedPast, 0)}%">already harvested</div>
-            <div class="harvested-now" style="width:${Math.max(harvestedNow, 0)}%">being harvested now</div>
-            <div class="harvested-qday">decryptable</div>
-          </div>
+          <div class="harvest-bar" id="harvest-bar" role="img" aria-label="Encrypted data accumulating from 2013, through the harvest happening now, into the window where it becomes decryptable at Q-Day">${harvestBarInner(qDayYearAbsolute)}</div>
         </div>
       </section>
 
       <section class="panel calculator-panel" id="mosca">
         <h2>MOSCA'S THEOREM: X + Y &gt; Z</h2>
-        <div class="sector-tabs" role="tablist" aria-label="Sector selector">${createSectorTabs()}</div>
+        <div class="sector-tabs" role="group" aria-label="Sector selector">${createSectorTabs()}</div>
 
         <div class="sliders">
           <label for="x-slider">X - Migration time (years to complete PQC transition): <span id="x-value">${migrationYears}</span> years</label>
@@ -404,28 +573,13 @@ function renderApp(): void {
           <input id="y-slider" type="range" min="1" max="80" value="${sensitivityYears}" aria-valuemin="1" aria-valuemax="80" aria-valuenow="${sensitivityYears}" aria-valuetext="${sensitivityYears} years" />
           <p class="small-note">How long must this data stay confidential? Genetic data can exceed 80 years.</p>
 
-          <label for="z-slider">Z - Q-Day estimate (years until cryptographically relevant quantum computer): <span id="z-value">${qDayYears}</span> years (${qDayYearAbsolute})</label>
+          <label for="z-slider">Z - Q-Day estimate (years until cryptographically relevant quantum computer): <span id="z-value">${qDayYears}</span> years (<span id="z-year">${qDayYearAbsolute}</span>)</label>
           <input id="z-slider" type="range" min="1" max="20" value="${qDayYears}" aria-valuemin="1" aria-valuemax="20" aria-valuenow="${qDayYears}" aria-valuetext="${qDayYears} years" />
           <p class="small-note">Consensus range: 2028-2035, centered near 2030 +- 3 years. Use ranges, not certainties.</p>
         </div>
 
-        <article class="verdict ${mosca.riskLevel}" aria-live="polite">
-          <p class="math">X + Y = ${mosca.X} + ${mosca.Y} = ${mosca.XplusY} years</p>
-          <p class="math">Z = ${mosca.Z} years</p>
-          <p class="math">${mosca.XplusY} ${sign} ${mosca.Z}</p>
-          <p class="verdict-line">${
-            mosca.atRisk
-              ? `AT RISK - ${mosca.riskLevel.toUpperCase()}`
-              : `NOT AT RISK - ${mosca.riskLevel.toUpperCase()}`
-          }</p>
-          <p>${
-            mosca.atRisk
-              ? `Data encrypted today will still be sensitive ${mosca.riskMargin} years after Q-Day arrives. An adversary collecting now can read it later.`
-              : `Current buffer: data sensitivity and migration complete ${Math.abs(mosca.riskMargin)} years before this Q-Day estimate.`
-          }</p>
-          <p>Q-Day estimate year: ${mosca.dataExposureYear}. To finish by then, migration needed to start by ${neededStart}.</p>
-          <p>${yearsBehind > 0 ? `You are already ${yearsBehind} year(s) behind this schedule.` : 'You are still inside the migration window if execution starts now.'}</p>
-        </article>
+        <p class="sr-only" id="mosca-status" role="status" aria-live="polite">${moscaStatus(mosca)}</p>
+        <article class="verdict ${mosca.riskLevel}">${verdictInner(mosca)}</article>
 
         <article class="sector-context">${renderSectorContext()}</article>
       </section>
@@ -452,7 +606,7 @@ function renderApp(): void {
               })
               .join('')}
           </div>
-          <article class="matrix-info" id="matrix-info">
+          <article class="matrix-info" id="matrix-info" aria-live="polite">
             Hover or click a sector dot to view its default Mosca profile at Z = 8 years.
           </article>
         </div>
@@ -485,25 +639,22 @@ function renderApp(): void {
     renderApp();
   });
 
+  // Native <button> elements already activate on Enter/Space, so no keydown shim
+  // is needed (it would double-fire). renderApp() rebuilds the DOM and drops focus
+  // to <body>; we restore it so keyboard/SR users keep their place (WCAG 2.4.3).
   document.querySelectorAll<HTMLButtonElement>('.timeline-event, .timeline-list-event').forEach((button) => {
     button.addEventListener('click', () => {
       const index = Number(button.dataset.eventIndex);
       if (!Number.isNaN(index)) {
         selectedEventIndex = index;
         renderApp();
-      }
-    });
-
-    button.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        button.click();
+        // Move focus to the detail panel so its refreshed content is announced.
+        document.querySelector<HTMLElement>('#timeline-details')?.focus();
       }
     });
   });
 
-  const tabButtons = document.querySelectorAll<HTMLButtonElement>('.sector-tab');
-  tabButtons.forEach((button) => {
+  document.querySelectorAll<HTMLButtonElement>('.sector-tab').forEach((button) => {
     button.addEventListener('click', () => {
       const key = button.dataset.sector as SectorKey;
       selectedSector = key;
@@ -512,6 +663,8 @@ function renderApp(): void {
         sensitivityYears = SECTOR_PRESETS[key].sensitivityYears;
       }
       renderApp();
+      // Re-focus the same tab after the rebuild.
+      document.querySelector<HTMLElement>(`.sector-tab[data-sector="${key}"]`)?.focus();
     });
   });
 
@@ -524,24 +677,26 @@ function renderApp(): void {
     slider.setAttribute('aria-valuetext', `${value} years`);
   };
 
+  // Slider input updates the DOM in place (refreshDynamic) rather than re-rendering
+  // the whole app — re-rendering would replace the <input> mid-drag and break the gesture.
   xSlider?.addEventListener('input', () => {
     migrationYears = Number(xSlider.value);
     selectedSector = 'custom';
     updateSlider(xSlider, migrationYears);
-    renderApp();
+    refreshDynamic();
   });
 
   ySlider?.addEventListener('input', () => {
     sensitivityYears = Number(ySlider.value);
     selectedSector = 'custom';
     updateSlider(ySlider, sensitivityYears);
-    renderApp();
+    refreshDynamic();
   });
 
   zSlider?.addEventListener('input', () => {
     qDayYears = Number(zSlider.value);
     updateSlider(zSlider, qDayYears);
-    renderApp();
+    refreshDynamic();
   });
 
   document.querySelectorAll<HTMLButtonElement>('.matrix-dot').forEach((dot) => {
@@ -570,12 +725,16 @@ function renderApp(): void {
 
 renderApp();
 
-setInterval(() => {
-  storageCounterTb += TRAFFIC_TB_PER_SECOND;
-  const counter = document.querySelector<HTMLElement>('#traffic-counter');
-  if (counter) {
-    counter.textContent = storageCounterTb.toLocaleString('en-US', {
-      maximumFractionDigits: 0,
-    });
-  }
-}, 1000);
+// The live counter is auto-updating content (WCAG 2.2.2). Honour reduced-motion by
+// not running it at all — the markup shows a static rate instead (see counter-box).
+if (!prefersReducedMotion) {
+  setInterval(() => {
+    storageCounterTb += TRAFFIC_TB_PER_SECOND;
+    const counter = document.querySelector<HTMLElement>('#traffic-counter');
+    if (counter) {
+      counter.textContent = storageCounterTb.toLocaleString('en-US', {
+        maximumFractionDigits: 0,
+      });
+    }
+  }, 1000);
+}

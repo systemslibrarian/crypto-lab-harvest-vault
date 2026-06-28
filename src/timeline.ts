@@ -47,21 +47,24 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
     label: 'Gidney: RSA-2048 under 1M qubits',
     category: 'quantum-progress',
     description:
-      'Google researcher Craig Gidney reduces RSA-2048 breaking estimate from 20M to <1M physical qubits. Timeline compressed.',
+      'Google researcher Craig Gidney reduces the RSA-2048 breaking estimate from ~20M (2019) to under 1M physical qubits in under a week. A 20x drop in six years — the timeline is compressing, not holding.',
+    source: 'Gidney, "How to factor 2048 bit RSA integers with less than a million noisy qubits," 2025 (arXiv 2505.15917).',
   },
   {
     year: 2026,
-    label: 'Google: ECC P-256 under 500K qubits',
+    label: 'Google: ECC-256 under 500K qubits',
     category: 'quantum-progress',
     description:
-      'Google whitepaper estimates ECC P-256 (secp256k1) vulnerable with <500K physical qubits. Blockchain and TLS implications severe.',
+      'Google Quantum AI (Babbush et al., March 2026) estimates a 256-bit elliptic curve discrete log breakable with ~500K physical qubits — down from ~9M (Litinski 2023). Demonstrated on secp256k1 (Bitcoin); NIST P-256 is comparable. Blockchain and TLS implications severe.',
+    source: 'Google Quantum AI resource-estimate whitepaper, 2026 (arXiv 2603.28846).',
   },
   {
     year: 2026,
     label: 'Oratomic: RSA-2048 under 100K qubits',
     category: 'quantum-progress',
     description:
-      'Neutral atom architecture estimates RSA-2048 breaking possible with ~100K qubits. Actual circuits not published. Most aggressive estimate to date.',
+      'Neutral-atom architecture (Oratomic, co-founded by Caltech\'s Manuel Endres) estimates RSA-2048 in ~97 days with ~100K qubits, or as few as 10K qubits given years of runtime. Today\'s largest neutral-atom array is ~6,100 qubits — the gap is engineering, not physics.',
+    source: 'Oratomic resource-estimate paper, 2026 (arXiv 2603.28627).',
   },
   {
     year: 2026,

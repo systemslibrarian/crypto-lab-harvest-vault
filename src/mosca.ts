@@ -131,6 +131,7 @@ export function computeMosca(input: MoscaInput, currentYear: number): MoscaResul
     riskLevel: toRiskLevel(riskMargin),
     explanation: buildExplanation(atRisk, riskMargin, XplusY, Z),
     dataExposureYear: currentYear + Z,
-    migrationDeadline: currentYear + (Z - Y),
+    // Latest year migration can START and still finish (it takes X years) before Q-Day.
+    migrationDeadline: currentYear + (Z - X),
   };
 }
