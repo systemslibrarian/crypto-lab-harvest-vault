@@ -501,6 +501,83 @@ function moscaStatus(mosca: MoscaResult): string {
   return `${mosca.atRisk ? 'At risk' : 'Not at risk'}, ${mosca.riskLevel}. X plus Y is ${mosca.XplusY} years, Z is ${mosca.Z} years.`;
 }
 
+function moscaForState(): MoscaResult {
+  return computeMosca({ migrationYears, sensitivityYears, qDayYears }, CURRENT_YEAR);
+}
+
+function sectorLabel(): string {
+  return selectedSector === 'custom' ? 'Custom profile' : SECTOR_PRESETS[selectedSector].label;
+}
+
+function topMitigations(): string[] {
+  return [
+    'Inventory all public-key crypto (TLS, VPN, SSH, S/MIME, code signing, APIs) and stand up a PQC migration plan (ML-KEM / ML-DSA).',
+    'Deploy hybrid key exchange (X25519 + ML-KEM) on new connections so traffic is protected from today onward.',
+    sensitivityYears > 15
+      ? 'Minimize retention of long-sensitivity data — once harvested it can never be re-protected.'
+      : 'Enable TLS 1.3 with forward secrecy everywhere it is currently missing.',
+  ];
+}
+
+function verdictText(m: MoscaResult): string {
+  const sign = m.XplusY > m.Z ? '>' : m.XplusY === m.Z ? '=' : '<';
+  return `${sectorLabel()}: X+Y = ${m.XplusY} ${sign} Z = ${m.Z} => ${m.atRisk ? 'AT RISK' : 'NOT AT RISK'} (${m.riskLevel}).`;
+}
+
+// Plain-text one-pager assembled from current state — used for both the on-screen
+// <pre> and the clipboard copy, so they can never drift apart.
+function briefText(): string {
+  const m = moscaForState();
+  const neededStart = m.dataExposureYear - m.X;
+  const behind = CURRENT_YEAR - neededStart;
+  const sign = m.XplusY > m.Z ? '>' : m.XplusY === m.Z ? '=' : '<';
+  const schedule =
+    behind > 0
+      ? `Already ${behind} year(s) behind: migration needed to start by ${neededStart}.`
+      : 'Still inside the window: migration can start now and finish before Q-Day.';
+  const mit = topMitigations()
+    .map((t, i) => `  ${i + 1}. ${t}`)
+    .join('\n');
+  return [
+    `HNDL RISK BRIEF - ${sectorLabel()}`,
+    `Source: Harvest Now, Decrypt Later visualizer (educational; Q-Day is a range, not a date).`,
+    ``,
+    `INPUTS`,
+    `  X  migration time .............. ${m.X} years`,
+    `  Y  data sensitivity lifetime ... ${m.Y} years`,
+    `  Z  Q-Day estimate .............. ${m.Z} years (~${m.dataExposureYear})`,
+    ``,
+    `MOSCA'S THEOREM`,
+    `  X + Y = ${m.XplusY}   vs   Z = ${m.Z}   =>   ${m.XplusY} ${sign} ${m.Z}`,
+    `  VERDICT: ${m.atRisk ? 'AT RISK' : 'NOT AT RISK'} (${m.riskLevel.toUpperCase()})`,
+    ``,
+    `SCHEDULE`,
+    `  Q-Day estimate year ........... ${m.dataExposureYear}`,
+    `  Latest year to start .......... ${neededStart}`,
+    `  ${schedule}`,
+    ``,
+    `TOP 3 ACTIONS FOR THIS PROFILE`,
+    mit,
+    ``,
+    `CANNOT BE FIXED RETROACTIVELY`,
+    `  Migrating later does not protect already-harvested traffic. Only data sent`,
+    `  after forward secrecy / hybrid key exchange is deployed is safe. Re-run quarterly.`,
+  ].join('\n');
+}
+
+async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<void> {
+  const original = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied!';
+  } catch {
+    btn.textContent = 'Copy failed — select & copy manually';
+  }
+  window.setTimeout(() => {
+    btn.textContent = original;
+  }, 1800);
+}
+
 function verdictInner(mosca: MoscaResult): string {
   const neededStart = mosca.dataExposureYear - mosca.X;
   const yearsBehind = CURRENT_YEAR - neededStart;
@@ -575,6 +652,9 @@ function refreshDynamic(): void {
 
   const bar = document.querySelector<HTMLElement>('#harvest-bar');
   if (bar) bar.innerHTML = harvestBarInner(qDayYearAbsolute);
+
+  const brief = document.querySelector<HTMLElement>('#brief-pre');
+  if (brief) brief.textContent = briefText();
 }
 
 function renderApp(): void {
@@ -720,6 +800,10 @@ function renderApp(): void {
 
         <p class="sr-only" id="mosca-status" role="status" aria-live="polite">${moscaStatus(mosca)}</p>
         <article class="verdict ${mosca.riskLevel}">${verdictInner(mosca)}</article>
+        <div class="verdict-actions no-print">
+          <button type="button" id="copy-verdict" class="action-btn small">Copy verdict</button>
+          <button type="button" id="reset-calc" class="action-btn small">Reset</button>
+        </div>
 
         <div class="scenario-block">
           <h3>Across the plausible Q-Day range</h3>
@@ -732,6 +816,16 @@ function renderApp(): void {
         )}
 
         <article class="sector-context">${renderSectorContext()}</article>
+      </section>
+
+      <section class="panel brief-panel" id="brief">
+        <h2>YOUR RISK BRIEF</h2>
+        <p class="lead">A copyable one-page summary built from your inputs above — take it to a manager, board, IT director, faculty meeting, or procurement discussion.</p>
+        <div class="brief-actions no-print">
+          <button type="button" id="copy-brief" class="action-btn">Copy brief</button>
+          <button type="button" id="print-brief" class="action-btn">Print / Save as PDF</button>
+        </div>
+        <pre class="brief-pre" id="brief-pre" tabindex="0" aria-label="Generated risk brief">${escapeHtml(briefText())}</pre>
       </section>
 
       <section class="panel matrix-panel" id="mitigations">
@@ -882,6 +976,23 @@ function renderApp(): void {
         ?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
       document.querySelector<HTMLElement>(`.sector-tab[data-sector="${key}"]`)?.focus();
     });
+  });
+
+  const copyVerdictBtn = document.querySelector<HTMLButtonElement>('#copy-verdict');
+  copyVerdictBtn?.addEventListener('click', () => copyToClipboard(verdictText(moscaForState()), copyVerdictBtn));
+
+  const copyBriefBtn = document.querySelector<HTMLButtonElement>('#copy-brief');
+  copyBriefBtn?.addEventListener('click', () => copyToClipboard(briefText(), copyBriefBtn));
+
+  document.querySelector<HTMLButtonElement>('#print-brief')?.addEventListener('click', () => window.print());
+
+  document.querySelector<HTMLButtonElement>('#reset-calc')?.addEventListener('click', () => {
+    selectedSector = 'healthcare';
+    migrationYears = SECTOR_PRESETS.healthcare.migrationYears;
+    sensitivityYears = SECTOR_PRESETS.healthcare.sensitivityYears;
+    qDayYears = 8;
+    renderApp();
+    document.querySelector<HTMLElement>('#x-slider')?.focus();
   });
 
   document.querySelectorAll<HTMLButtonElement>('.matrix-z-btn').forEach((btn) => {

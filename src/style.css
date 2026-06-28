@@ -1297,6 +1297,91 @@ input[type='range'] {
   }
 }
 
+/* ---- action buttons + risk brief ---- */
+.action-btn {
+  border: 1px solid var(--harvest);
+  background: rgba(0, 170, 255, 0.12);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.55rem 0.95rem;
+  min-height: 44px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
+.action-btn:hover {
+  background: rgba(0, 170, 255, 0.2);
+}
+
+.action-btn.small {
+  min-height: 38px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.brief-actions,
+.verdict-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.7rem 0;
+}
+
+.brief-pre {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  background: var(--bg-soft);
+  overflow-x: auto;
+}
+
+/* ---- print: show only the risk brief, black on white ---- */
+@media print {
+  .cl-topbar,
+  .cl-skip-link,
+  .skip-link,
+  #theme-toggle,
+  .no-print,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  #app {
+    max-width: none;
+    padding: 0;
+  }
+
+  main > .panel:not(#brief) {
+    display: none !important;
+  }
+
+  #brief {
+    border: none;
+    background: #fff;
+    backdrop-filter: none;
+  }
+
+  #brief,
+  #brief * {
+    color: #000 !important;
+  }
+
+  .brief-pre {
+    background: #fff;
+    border: 1px solid #999;
+  }
+}
+
 footer {
   margin-top: 1rem;
   border: 1px solid var(--line);
