@@ -17,6 +17,31 @@ with sector-specific presets, an interactive HNDL timeline from 2013
 through the Q-Day probability window, and a sector risk matrix across
 healthcare, government, finance, legal, library, and enterprise.
 
+## Learning Path & Features
+
+The demo is structured as a guided learning instrument, not just an
+explainer. A sticky progress nav follows six steps — what is harvested,
+what breaks at Q-Day, why time matters, is my sector at risk, what
+mitigations help, and a self-check.
+
+- **Mosca calculator** with a three-scenario Q-Day comparison (aggressive
+  2028 / center 2030 / conservative 2035) so the lesson is surviving the
+  range, not guessing a date.
+- **Interactive sector matrix**: click a dot to load that sector into the
+  calculator; toggle Z = 4 / 8 / 12 to watch sectors cross between risk states.
+- **Copyable risk brief** (and Print / Save-as-PDF) summarizing your inputs,
+  verdict, schedule, and top three tailored actions.
+- **Threat-model, protocol-example, and misconception** panels that keep the
+  claim precise (the RSA/ECC handshake is the target; AES-256 is not broken).
+- **Evidence & Confidence** section: every major claim is labelled
+  (confirmed / standardized / estimate / illustrative / recommendation) and
+  linked to a primary source.
+- **Five-question self-check**, a "What To Do Monday" action plan, and a glossary.
+- **Shareable URLs**: the selected sector and X/Y/Z slider values are encoded
+  in the URL, so a configured view can be linked directly.
+
+All of it is static and client-side — no backends, no data leaves the browser.
+
 ## When to Use It
 
 - Explaining to leadership why PQC migration is urgent NOW, not when

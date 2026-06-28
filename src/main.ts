@@ -16,11 +16,18 @@ import {
   type Confidence,
 } from './content';
 
+function setText(sel: string, value: string): void {
+  const el = document.querySelector<HTMLElement>(sel);
+  if (el) el.textContent = value;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function confidenceBadge(kind: Confidence): string {
@@ -49,27 +56,35 @@ const clamp = (n: number, lo: number, hi: number): number => Math.min(Math.max(n
 // Read shareable state (sector + X/Y/Z) from the URL on load.
 function parseStateFromUrl(): void {
   const p = new URLSearchParams(window.location.search);
-  const sector = p.get('sector');
-  if (sector && (sectorOrder as string[]).includes(sector)) {
-    selectedSector = sector as SectorKey;
-    if (sector !== 'custom') {
-      migrationYears = SECTOR_PRESETS[sector].migrationYears;
-      sensitivityYears = SECTOR_PRESETS[sector].sensitivityYears;
-    }
+  const sectorParam = p.get('sector');
+  const namedSector =
+    sectorParam && (sectorOrder as string[]).includes(sectorParam) ? (sectorParam as SectorKey) : null;
+
+  // Apply the named sector's preset first, so explicit x/y can override it below.
+  if (namedSector && namedSector !== 'custom') {
+    selectedSector = namedSector;
+    migrationYears = SECTOR_PRESETS[namedSector].migrationYears;
+    sensitivityYears = SECTOR_PRESETS[namedSector].sensitivityYears;
+  } else if (namedSector === 'custom') {
+    selectedSector = 'custom';
   }
+
   const x = Number(p.get('x'));
   const y = Number(p.get('y'));
   const z = Number(p.get('z'));
-  if (Number.isFinite(x) && p.has('x')) {
-    migrationYears = clamp(Math.round(x), 1, 15);
+  if (p.has('x') && Number.isFinite(x)) migrationYears = clamp(Math.round(x), 1, 15);
+  if (p.has('y') && Number.isFinite(y)) sensitivityYears = clamp(Math.round(y), 1, 80);
+  if (p.has('z') && Number.isFinite(z)) qDayYears = clamp(Math.round(z), 1, 20);
+
+  // Reconcile: keep the named sector only if the values still match its preset;
+  // otherwise (or if no/invalid sector param but custom values were given) it's custom.
+  if (selectedSector !== 'custom') {
+    const preset = SECTOR_PRESETS[selectedSector];
+    if (migrationYears !== preset.migrationYears || sensitivityYears !== preset.sensitivityYears) {
+      selectedSector = 'custom';
+    }
+  } else if (!namedSector && (p.has('x') || p.has('y'))) {
     selectedSector = 'custom';
-  }
-  if (Number.isFinite(y) && p.has('y')) {
-    sensitivityYears = clamp(Math.round(y), 1, 80);
-    selectedSector = 'custom';
-  }
-  if (Number.isFinite(z) && p.has('z')) {
-    qDayYears = clamp(Math.round(z), 1, 20);
   }
 }
 
@@ -82,6 +97,14 @@ function syncUrl(): void {
   p.set('y', String(sensitivityYears));
   p.set('z', String(qDayYears));
   window.history.replaceState(null, '', `${window.location.pathname}?${p.toString()}`);
+}
+
+// Debounced variant for high-frequency callers (slider 'input'): WebKit throws
+// SecurityError if replaceState is called too often, so coalesce drag updates.
+let urlTimer: number | undefined;
+function scheduleSyncUrl(): void {
+  if (urlTimer !== undefined) window.clearTimeout(urlTimer);
+  urlTimer = window.setTimeout(syncUrl, 300);
 }
 
 function createProgressNav(): string {
@@ -143,7 +166,7 @@ function createActionPlan(): string {
   ).join('');
 }
 
-function createQuiz(): string {
+function createQuizList(): string {
   const questions = QUIZ.map((item, qi) => {
     const answered = quizAnswers[qi];
     const opts = item.options
@@ -171,13 +194,15 @@ function createQuiz(): string {
     return `<li class="quiz-q"><p class="quiz-prompt">${qi + 1}. ${item.q}</p><div class="quiz-opts">${opts}</div>${feedback}</li>`;
   }).join('');
 
+  return `<ol class="quiz-list">${questions}</ol>`;
+}
+
+function quizScoreText(): string {
   const answeredCount = quizAnswers.filter((a) => a !== null).length;
   const score = quizAnswers.reduce<number>((n, a, i) => n + (a === QUIZ[i].correct ? 1 : 0), 0);
-  const scoreLine =
-    answeredCount > 0
-      ? `Score: ${score} / ${QUIZ.length}${answeredCount < QUIZ.length ? ` (${answeredCount} of ${QUIZ.length} answered)` : ' — all answered'}`
-      : 'Answer to check your understanding. Nothing is scored remotely or sent anywhere.';
-  return `<p class="quiz-score" id="quiz-score" role="status" aria-live="polite">${scoreLine}</p><ol class="quiz-list">${questions}</ol>`;
+  return answeredCount > 0
+    ? `Score: ${score} / ${QUIZ.length}${answeredCount < QUIZ.length ? ` (${answeredCount} of ${QUIZ.length} answered)` : ' — all answered'}`
+    : 'Answer to check your understanding. Nothing is scored remotely or sent anywhere.';
 }
 
 function createMatrixZToggle(): string {
@@ -767,10 +792,6 @@ function refreshDynamic(): void {
   const qDayYearAbsolute = CURRENT_YEAR + qDayYears;
   const mosca = computeMosca({ migrationYears, sensitivityYears, qDayYears }, CURRENT_YEAR);
 
-  const setText = (sel: string, value: string): void => {
-    const el = document.querySelector<HTMLElement>(sel);
-    if (el) el.textContent = value;
-  };
   setText('#x-value', String(migrationYears));
   setText('#y-value', String(sensitivityYears));
   setText('#z-value', String(qDayYears));
@@ -807,7 +828,7 @@ function refreshDynamic(): void {
   const brief = document.querySelector<HTMLElement>('#brief-pre');
   if (brief) brief.textContent = briefText();
 
-  syncUrl();
+  scheduleSyncUrl();
 }
 
 function renderApp(): void {
@@ -1030,7 +1051,8 @@ function renderApp(): void {
         <div class="brief-actions no-print">
           <button type="button" id="quiz-reset" class="action-btn small">Reset quiz</button>
         </div>
-        <div id="quiz-body">${createQuiz()}</div>
+        <p class="quiz-score" id="quiz-score" role="status" aria-live="polite">${quizScoreText()}</p>
+        <div id="quiz-body">${createQuizList()}</div>
       </section>
 
       <section class="panel evidence-panel" id="evidence">
@@ -1168,13 +1190,15 @@ function renderApp(): void {
     const qi = Number(btn.dataset.q);
     const oi = Number(btn.dataset.opt);
     quizAnswers[qi] = oi;
-    quizBody.innerHTML = createQuiz();
+    quizBody.innerHTML = createQuizList();
+    setText('#quiz-score', quizScoreText());
     quizBody.querySelector<HTMLElement>(`button[data-q="${qi}"][data-opt="${oi}"]`)?.focus();
   });
 
   document.querySelector<HTMLButtonElement>('#quiz-reset')?.addEventListener('click', () => {
     quizAnswers.fill(null);
-    if (quizBody) quizBody.innerHTML = createQuiz();
+    if (quizBody) quizBody.innerHTML = createQuizList();
+    setText('#quiz-score', quizScoreText());
   });
 
   document.querySelector<HTMLButtonElement>('#reset-calc')?.addEventListener('click', () => {
