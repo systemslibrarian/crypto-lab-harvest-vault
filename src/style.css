@@ -1297,6 +1297,44 @@ input[type='range'] {
   }
 }
 
+/* ---- what to do monday ---- */
+.action-grid {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.action-col {
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--harvest);
+  border-radius: 10px;
+  padding: 0.85rem 0.95rem;
+}
+
+.action-col h3 {
+  font-size: 0.98rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.action-col ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.action-col li {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+@media (min-width: 820px) {
+  .action-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* ---- assessment / quiz ---- */
 .quiz-score {
   font-family: var(--mono);

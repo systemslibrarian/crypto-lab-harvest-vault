@@ -9,6 +9,7 @@ import {
   Z_SCENARIOS,
   SECTOR_RATIONALE,
   QUIZ,
+  ACTION_PLAN,
   CONFIDENCE_LABEL,
   CONFIDENCE_BLURB,
   type Confidence,
@@ -38,6 +39,16 @@ function createProtocolExamples(): string {
       <article class="protocol-card proto-${ex.verdict}">
         <header><h3>${ex.name}</h3><span class="proto-tag">${ex.verdictLabel}</span></header>
         <p>${ex.body}</p>
+      </article>`,
+  ).join('');
+}
+
+function createActionPlan(): string {
+  return ACTION_PLAN.map(
+    (phase) => `
+      <article class="action-col">
+        <h3>${phase.timeframe}</h3>
+        <ul>${phase.items.map((i) => `<li>${i}</li>`).join('')}</ul>
       </article>`,
   ).join('');
 }
@@ -901,6 +912,12 @@ function renderApp(): void {
           <p>2026 has been designated the Year of Quantum Security by FBI, NIST, and CISA.</p>
           <p>If you are not migrating, you are being harvested.</p>
         </article>
+      </section>
+
+      <section class="panel monday-panel" id="monday">
+        <h2>WHAT TO DO MONDAY ${confidenceBadge('recommendation')}</h2>
+        <p class="lead">The threat is concrete, so the response should be too. A practical sequence for leadership and practitioners — not a standards reading list.</p>
+        <div class="action-grid">${createActionPlan()}</div>
       </section>
 
       <section class="panel quiz-panel" id="quiz">

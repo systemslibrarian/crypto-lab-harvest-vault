@@ -186,6 +186,41 @@ export const MISCONCEPTIONS: Misconception[] = [
   },
 ];
 
+export interface ActionPhase {
+  timeframe: string;
+  items: string[];
+}
+
+export const ACTION_PLAN: ActionPhase[] = [
+  {
+    timeframe: 'First 30 days',
+    items: [
+      'Inventory public-key cryptography: TLS, VPN, SSH, S/MIME, code signing, certificates, APIs, backups, vendor links.',
+      'Identify your long-sensitivity data flows — the high-Y systems.',
+      'Turn on TLS 1.3 and forward secrecy wherever it is missing.',
+      'Ask your key vendors for their PQC roadmaps in writing.',
+    ],
+  },
+  {
+    timeframe: 'Next 90 days',
+    items: [
+      'Pilot hybrid key exchange (X25519 + ML-KEM) where your stack supports it.',
+      'Update procurement requirements to demand PQC-readiness.',
+      'Reduce retention of sensitive logs and archived communications.',
+      'Name a migration owner and draft a timeline.',
+    ],
+  },
+  {
+    timeframe: 'Next 12 months',
+    items: [
+      'Prioritize high-sensitivity, high-retention systems first.',
+      'Move new systems onto PQC-ready libraries and protocols.',
+      'Track standards and browser/server support as it ships.',
+      'Re-run the Mosca estimate quarterly and adjust.',
+    ],
+  },
+];
+
 export interface QuizQuestion {
   q: string;
   options: string[];
