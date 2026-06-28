@@ -1073,6 +1073,12 @@ function renderApp(): void {
     </main>
 
     <footer>
+      <p>Related demos:
+        <a href="https://systemslibrarian.github.io/crypto-lab-harvest-timeline/" target="_blank" rel="noopener">crypto-lab-harvest-timeline</a> ·
+        <a href="https://systemslibrarian.github.io/crypto-lab-shor/" target="_blank" rel="noopener">crypto-lab-shor</a> ·
+        <a href="https://systemslibrarian.github.io/crypto-lab-grover/" target="_blank" rel="noopener">crypto-lab-grover</a> ·
+        <a href="https://systemslibrarian.github.io/crypto-lab-pq-rotation/" target="_blank" rel="noopener">crypto-lab-pq-rotation</a> ·
+        <a href="https://systemslibrarian.github.io/crypto-lab-pq-families/" target="_blank" rel="noopener">crypto-lab-pq-families</a></p>
       <p>"Whether therefore ye eat, or drink, or whatsoever ye do,
       do all to the glory of God." — 1 Corinthians 10:31</p>
     </footer>
