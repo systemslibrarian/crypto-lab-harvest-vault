@@ -8,6 +8,7 @@ import {
   MISCONCEPTIONS,
   Z_SCENARIOS,
   SECTOR_RATIONALE,
+  QUIZ,
   CONFIDENCE_LABEL,
   CONFIDENCE_BLURB,
   type Confidence,
@@ -39,6 +40,43 @@ function createProtocolExamples(): string {
         <p>${ex.body}</p>
       </article>`,
   ).join('');
+}
+
+function createQuiz(): string {
+  const questions = QUIZ.map((item, qi) => {
+    const answered = quizAnswers[qi];
+    const opts = item.options
+      .map((opt, oi) => {
+        let cls = 'quiz-opt';
+        let mark = '';
+        if (answered !== null) {
+          if (oi === item.correct) {
+            cls += ' correct';
+            mark = ' ✓';
+          } else if (oi === answered) {
+            cls += ' wrong';
+            mark = ' ✗';
+          }
+        }
+        return `<button type="button" class="${cls}" data-q="${qi}" data-opt="${oi}" aria-pressed="${answered === oi}">${opt}${mark}</button>`;
+      })
+      .join('');
+    const feedback =
+      answered !== null
+        ? `<p class="quiz-explain ${answered === item.correct ? 'good' : 'bad'}">${
+            answered === item.correct ? 'Correct.' : 'Not quite.'
+          } ${item.explain}</p>`
+        : '';
+    return `<li class="quiz-q"><p class="quiz-prompt">${qi + 1}. ${item.q}</p><div class="quiz-opts">${opts}</div>${feedback}</li>`;
+  }).join('');
+
+  const answeredCount = quizAnswers.filter((a) => a !== null).length;
+  const score = quizAnswers.reduce<number>((n, a, i) => n + (a === QUIZ[i].correct ? 1 : 0), 0);
+  const scoreLine =
+    answeredCount > 0
+      ? `Score: ${score} / ${QUIZ.length}${answeredCount < QUIZ.length ? ` (${answeredCount} of ${QUIZ.length} answered)` : ' — all answered'}`
+      : 'Answer to check your understanding. Nothing is scored remotely or sent anywhere.';
+  return `<p class="quiz-score" id="quiz-score" role="status" aria-live="polite">${scoreLine}</p><ol class="quiz-list">${questions}</ol>`;
 }
 
 function createMatrixZToggle(): string {
@@ -359,6 +397,7 @@ let migrationYears = SECTOR_PRESETS.healthcare.migrationYears;
 let sensitivityYears = SECTOR_PRESETS.healthcare.sensitivityYears;
 let qDayYears = 8;
 let matrixZ = 8;
+const quizAnswers: (number | null)[] = QUIZ.map(() => null);
 // Index into timelineSorted (the array every consumer renders from), not the
 // unsorted source — otherwise the initial highlight points at the wrong event
 // the moment timeline.ts is reordered.
@@ -864,6 +903,15 @@ function renderApp(): void {
         </article>
       </section>
 
+      <section class="panel quiz-panel" id="quiz">
+        <h2>CHECK YOUR UNDERSTANDING</h2>
+        <p class="lead">Five quick questions — retrieval practice, not an exam. Pick an answer to see whether it’s right and why.</p>
+        <div class="brief-actions no-print">
+          <button type="button" id="quiz-reset" class="action-btn small">Reset quiz</button>
+        </div>
+        <div id="quiz-body">${createQuiz()}</div>
+      </section>
+
       <section class="panel evidence-panel" id="evidence">
         <h2>EVIDENCE &amp; CONFIDENCE</h2>
         <p class="lead">This topic is easy to dismiss as speculation, so every major claim is labelled by how well-established it is — and linked to a primary source. Expand any claim to see the basis.</p>
@@ -985,6 +1033,23 @@ function renderApp(): void {
   copyBriefBtn?.addEventListener('click', () => copyToClipboard(briefText(), copyBriefBtn));
 
   document.querySelector<HTMLButtonElement>('#print-brief')?.addEventListener('click', () => window.print());
+
+  // Delegated so handlers survive the quiz innerHTML refresh after each answer.
+  const quizBody = document.querySelector<HTMLElement>('#quiz-body');
+  quizBody?.addEventListener('click', (event) => {
+    const btn = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-q]');
+    if (!btn) return;
+    const qi = Number(btn.dataset.q);
+    const oi = Number(btn.dataset.opt);
+    quizAnswers[qi] = oi;
+    quizBody.innerHTML = createQuiz();
+    quizBody.querySelector<HTMLElement>(`button[data-q="${qi}"][data-opt="${oi}"]`)?.focus();
+  });
+
+  document.querySelector<HTMLButtonElement>('#quiz-reset')?.addEventListener('click', () => {
+    quizAnswers.fill(null);
+    if (quizBody) quizBody.innerHTML = createQuiz();
+  });
 
   document.querySelector<HTMLButtonElement>('#reset-calc')?.addEventListener('click', () => {
     selectedSector = 'healthcare';

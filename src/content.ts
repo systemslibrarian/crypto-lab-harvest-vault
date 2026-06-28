@@ -186,6 +186,72 @@ export const MISCONCEPTIONS: Misconception[] = [
   },
 ];
 
+export interface QuizQuestion {
+  q: string;
+  options: string[];
+  correct: number;
+  explain: string;
+}
+
+// Retrieval practice, not an exam — five questions covering the core lesson.
+export const QUIZ: QuizQuestion[] = [
+  {
+    q: 'Data must stay secret for 20 years (Y=20), migration takes 6 (X=6), Q-Day is ~10 years out (Z=10). What does Mosca’s theorem say?',
+    options: [
+      'At risk — X + Y (26) is greater than Z (10)',
+      'Safe — large quantum computers don’t exist yet',
+      'Safe — they can just use AES-256',
+      'At risk only if Q-Day turns out to be exactly 2030',
+    ],
+    correct: 0,
+    explain: 'X + Y = 26 > Z = 10, so data encrypted during migration is still sensitive long after Q-Day. The theorem doesn’t depend on quantum computers existing today or on an exact date.',
+  },
+  {
+    q: 'Which action protects future traffic but does NOTHING for data an adversary already captured?',
+    options: [
+      'Deploying PQC / hybrid key exchange today',
+      'Having had forward secrecy in place before the data was collected',
+      'Never transmitting the data in the first place',
+      'All of these help already-captured data equally',
+    ],
+    correct: 0,
+    explain: 'PQC deployed today protects new sessions only. Already-harvested ciphertext is beyond its reach — which is exactly why waiting is dangerous.',
+  },
+  {
+    q: 'An adversary may already hold years of your ciphertext. Which could limit the damage of that ALREADY-harvested data?',
+    options: [
+      'Forward secrecy that existed before the data was collected',
+      'Migrating to PQC next quarter',
+      'Rotating the bulk cipher to AES-256 today',
+      'Adding a new firewall rule',
+    ],
+    correct: 0,
+    explain: 'Only protection present at collection time limits old exposure. Everything deployed now helps future traffic only — the core HNDL problem.',
+  },
+  {
+    q: 'What is the MAIN target of the Harvest Now, Decrypt Later threat?',
+    options: [
+      'Public-key key exchange and signatures (RSA, ECC/ECDH, ECDSA)',
+      'AES-256 symmetric encryption',
+      'SHA-256 hashing',
+      'Password length',
+    ],
+    correct: 0,
+    explain: 'Shor breaks the public-key handshake. AES-256 and SHA-2 are only weakened by Grover and remain safe at doubled key sizes.',
+  },
+  {
+    q: 'Two organizations both hold data with Y=30, and Q-Day is ~10 years out. Org A finishes migration in 3 years; Org B takes 9. Who is better positioned?',
+    options: [
+      'Org A — smaller X means it crosses the line by less and closes the window sooner',
+      'Org B — taking longer to migrate is safer',
+      'Identical — only Y matters',
+      'Neither — AES-256 protects both',
+    ],
+    correct: 0,
+    explain: 'Both are at risk (X + Y > Z), but Org A’s exposure past Q-Day is smaller (33 vs 39) and its window closes years earlier. Cutting migration time (X) is a real lever.',
+  },
+];
+
 export interface ProtocolExample {
   name: string;
   verdict: 'vulnerable' | 'partial' | 'strong' | 'different';

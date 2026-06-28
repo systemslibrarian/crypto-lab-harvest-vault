@@ -1297,6 +1297,82 @@ input[type='range'] {
   }
 }
 
+/* ---- assessment / quiz ---- */
+.quiz-score {
+  font-family: var(--mono);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.quiz-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.quiz-q {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.quiz-prompt {
+  font-weight: 600;
+}
+
+.quiz-opts {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.quiz-opt {
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  min-height: 44px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.quiz-opt:hover {
+  border-color: var(--harvest);
+}
+
+.quiz-opt.correct {
+  border-color: var(--safe);
+  background: rgba(0, 204, 102, 0.14);
+}
+
+.quiz-opt.wrong {
+  border-color: var(--danger);
+  background: rgba(255, 34, 34, 0.14);
+}
+
+/* Colour the correctness signal via a left border (no small-text contrast risk);
+   the wording "Correct."/"Not quite." and the option highlight carry the rest. */
+.quiz-explain {
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--line);
+}
+
+.quiz-explain.good {
+  border-left-color: var(--safe);
+}
+
+.quiz-explain.bad {
+  border-left-color: var(--danger);
+}
+
 /* ---- action buttons + risk brief ---- */
 .action-btn {
   border: 1px solid var(--harvest);
