@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      const t = localStorage.getItem('cv-theme') || 'dark';
+      // The shared header's toggle persists to 'theme'; this lab's own toggle uses
+      // 'cv-theme'. Honour either so the choice survives a reload regardless of source.
+      const t = localStorage.getItem('theme') || localStorage.getItem('cv-theme') || 'dark';
       document.documentElement.setAttribute('data-theme', t);
     </script>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
