@@ -639,10 +639,11 @@ html[data-theme='light'] .qday-band {
   overflow: hidden;
   font-size: 0.76rem;
   font-weight: 600;
-  /* Dark ink on fixed bright fills — passes >=5:1 in BOTH themes. White text on
-     these hues failed WCAG 1.4.3 (e.g. white on amber ~1.9:1). Fills are
-     intentionally theme-independent so the contrast guarantee always holds. */
-  color: #0b1512;
+  /* Bar fills use theme accent vars, so their lightness flips between themes.
+     In the light theme the fills are deep accents (blue/brown/red), so white
+     ink clears WCAG 1.4.3 (>=5.6:1); the dark-theme override below swaps to
+     near-black ink for that theme's bright fills. */
+  color: #ffffff;
   white-space: nowrap;
   padding: 0 0.2rem;
 }
@@ -661,7 +662,7 @@ html[data-theme='light'] .qday-band {
 }
 
 /* On the dark theme the bar fills are bright accents, so white labels fail
-   WCAG contrast; use near-black ink there instead. */
+   WCAG contrast (e.g. white on amber ~1.9:1); use near-black ink there. */
 html[data-theme='dark'] .harvested-past,
 html[data-theme='dark'] .harvested-now,
 html[data-theme='dark'] .harvested-qday {
