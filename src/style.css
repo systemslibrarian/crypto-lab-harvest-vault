@@ -4,6 +4,7 @@
 }
 
 html[data-theme='dark'] {
+  color-scheme: dark;
   --bg: #080808;
   --bg-soft: #111217;
   --text: #e5edf7;
@@ -11,7 +12,7 @@ html[data-theme='dark'] {
   --line: #273447;
   --harvest: #00aaff;
   --warning: #ffaa00;
-  --danger: #ff2222;
+  --danger: #ff6b6b;
   --safe: #00cc66;
   --quantum: #ff00ff;
   --panel: rgba(10, 16, 24, 0.82);
@@ -19,18 +20,23 @@ html[data-theme='dark'] {
 }
 
 html[data-theme='light'] {
+  color-scheme: light;
   --bg: #f8f8f8;
   --bg-soft: #e6ebf1;
   --text: #102133;
   --muted: #264057;
   --line: #bdc9d8;
-  --harvest: #0078c8;
-  --warning: #c66c00;
-  --danger: #d01616;
-  --safe: #0b8e4e;
+  --harvest: #0a66c2;
+  --warning: #9a5300;
+  --danger: #a80d0d;
+  --safe: #0a6b3b;
   --quantum: #a700b8;
   --panel: rgba(255, 255, 255, 0.86);
   --focus: #08466c;
+}
+
+html {
+  background-color: var(--bg);
 }
 
 * {
@@ -42,7 +48,7 @@ html[data-theme='light'] {
   left: -999px;
   top: 0.5rem;
   z-index: 100;
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text);
   padding: 0.5rem 1rem;
   border: 2px solid var(--focus);
@@ -112,7 +118,7 @@ p {
 
 .panel {
   border: 1px solid var(--line);
-  background: var(--panel);
+  background-color: var(--panel);
   border-radius: 14px;
   padding: clamp(1rem, 2vw, 1.5rem);
   backdrop-filter: blur(3px);
@@ -128,7 +134,7 @@ p {
   height: 2.6rem;
   font-size: 1.3rem;
   cursor: pointer;
-  background: var(--panel);
+  background-color: var(--panel);
   color: var(--text);
 }
 
@@ -164,19 +170,19 @@ p {
 }
 
 .act-1 {
-  background: rgba(0, 170, 255, 0.12);
+  background-color: rgba(0, 170, 255, 0.12);
   color: var(--harvest);
   animation: cycle-one 8s linear infinite;
 }
 
 .act-2 {
-  background: rgba(255, 170, 0, 0.13);
+  background-color: rgba(255, 170, 0, 0.13);
   color: var(--warning);
   animation: cycle-two 8s linear infinite;
 }
 
 .act-3 {
-  background: rgba(255, 34, 34, 0.13);
+  background-color: rgba(255, 34, 34, 0.13);
   color: var(--danger);
   animation: cycle-three 8s linear infinite;
 }
@@ -245,6 +251,13 @@ p {
   );
 }
 
+/* On the light theme the band tint is pale, so white text fails contrast;
+   use the standard dark ink instead. */
+html[data-theme='light'] .qday-band {
+  color: var(--text);
+  text-shadow: none;
+}
+
 .you-are-here,
 .qday-estimate-marker {
   position: absolute;
@@ -255,7 +268,7 @@ p {
 }
 
 .you-are-here {
-  color: #f0cf7b;
+  color: var(--warning);
 }
 
 .you-are-here::after {
@@ -265,7 +278,7 @@ p {
   left: 50%;
   transform: translateX(-50%);
   height: 250px;
-  border-left: 3px solid #f0cf7b;
+  border-left: 3px solid var(--warning);
 }
 
 .qday-estimate-marker {
@@ -277,7 +290,7 @@ p {
   position: absolute;
   transform: translateX(-50%);
   width: 120px;
-  background: transparent;
+  background-color: transparent;
   border: none;
   color: var(--text);
   display: grid;
@@ -312,20 +325,20 @@ p {
 }
 
 .timeline-event.harvest::before {
-  background: var(--harvest);
+  background-color: var(--harvest);
 }
 
 .timeline-event.quantum::before {
-  background: var(--quantum);
+  background-color: var(--quantum);
 }
 
 .timeline-event.standard::before,
 .timeline-event.migration::before {
-  background: var(--safe);
+  background-color: var(--safe);
 }
 
 .timeline-event.qday::before {
-  background: var(--danger);
+  background-color: var(--danger);
 }
 
 .timeline-event.active,
@@ -352,7 +365,7 @@ p {
   padding: 0.65rem;
   text-align: left;
   color: var(--text);
-  background: transparent;
+  background-color: transparent;
 }
 
 .timeline-list-event span {
@@ -387,16 +400,24 @@ p {
 }
 
 .harvested-past {
-  background: var(--harvest);
+  background-color: var(--harvest);
 }
 
 .harvested-now {
-  background: var(--warning);
+  background-color: var(--warning);
 }
 
 .harvested-qday {
   min-width: 92px;
-  background: var(--danger);
+  background-color: var(--danger);
+}
+
+/* On the dark theme the bar fills are bright accents, so white labels fail
+   WCAG contrast; use near-black ink there instead. */
+html[data-theme='dark'] .harvested-past,
+html[data-theme='dark'] .harvested-now,
+html[data-theme='dark'] .harvested-qday {
+  color: #001018;
 }
 
 .sector-tabs {
@@ -411,14 +432,14 @@ p {
   border-radius: 999px;
   padding: 0.5rem 0.75rem;
   min-height: 44px;
-  background: transparent;
+  background-color: transparent;
   color: var(--text);
   cursor: pointer;
   font-size: 0.95rem;
 }
 
 .sector-tab.active {
-  background: rgba(0, 170, 255, 0.16);
+  background-color: rgba(0, 170, 255, 0.16);
   color: var(--harvest);
   border-color: var(--harvest);
 }
@@ -451,19 +472,19 @@ input[type='range'] {
 
 .verdict.critical {
   border-color: var(--danger);
-  background: rgba(255, 34, 34, 0.17);
+  background-color: rgba(255, 34, 34, 0.17);
 }
 
 .verdict.high,
 .verdict.moderate {
   border-color: var(--warning);
-  background: rgba(255, 170, 0, 0.15);
+  background-color: rgba(255, 170, 0, 0.15);
 }
 
 .verdict.low,
 .verdict.safe {
   border-color: var(--safe);
-  background: rgba(0, 204, 102, 0.14);
+  background-color: rgba(0, 204, 102, 0.14);
 }
 
 .sector-context {
@@ -530,14 +551,14 @@ input[type='range'] {
 .matrix-dot.critical,
 .matrix-dot.high,
 .matrix-dot.moderate {
-  background: rgba(255, 34, 34, 0.2);
+  background-color: rgba(255, 34, 34, 0.2);
   border-color: var(--danger);
   color: var(--danger);
 }
 
 .matrix-dot.low,
 .matrix-dot.safe {
-  background: rgba(0, 204, 102, 0.2);
+  background-color: rgba(0, 204, 102, 0.2);
   border-color: var(--safe);
   color: var(--safe);
 }
@@ -566,7 +587,7 @@ input[type='range'] {
 }
 
 .mitigation-card[open] {
-  background: rgba(0, 170, 255, 0.08);
+  background-color: rgba(0, 170, 255, 0.08);
 }
 
 .urgent-reality {
@@ -574,7 +595,7 @@ input[type='range'] {
   border: 1px solid var(--danger);
   border-radius: 10px;
   padding: 1rem;
-  background: rgba(255, 34, 34, 0.1);
+  background-color: rgba(255, 34, 34, 0.1);
   display: grid;
   gap: 0.45rem;
 }
