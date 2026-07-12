@@ -848,9 +848,20 @@ function renderApp(): void {
     }</button>
 
     <main>
+      <header class="cl-hero">
+        <div class="cl-hero-main">
+          <h1 class="cl-hero-title">Harvest Now, Decrypt Later</h1>
+          <p class="cl-hero-sub">HNDL threat model · Mosca's Theorem (X + Y &gt; Z)</p>
+          <p class="cl-hero-desc">Model your own X + Y &gt; Z risk with live sliders, watch the three-act harvest-wait-decrypt timeline, and read a sector risk matrix that shows when data outlives Q-Day.</p>
+        </div>
+        <aside class="cl-hero-why" aria-label="Why it matters">
+          <span class="cl-hero-why-label">WHY IT MATTERS</span>
+          <p class="cl-hero-why-text">RSA/ECC traffic captured today can be decrypted retroactively once quantum computers arrive. Anything with a long secrecy lifetime — health, legal, government, patron records — may already be sitting in an adversary's store, waiting for Q-Day.</p>
+        </aside>
+      </header>
       ${createProgressNav()}
       <section class="panel hero-panel" id="threat">
-        <h1>The breach has already happened.<br/>You just don't know it yet.</h1>
+        <p class="hero-headline">The breach has already happened.<br/>You just don't know it yet.</p>
         <p class="lead">Adversaries are collecting your encrypted communications today. RSA and ECC cannot be broken now - but they will be. When quantum computers arrive, every stored ciphertext becomes readable.</p>
         <p class="lead">This is Harvest Now, Decrypt Later. It is not a future threat. It is a present collection strategy.</p>
 
