@@ -1,12 +1,18 @@
 export interface MoscaInput {
+  /** Years the organization needs to fully deploy PQC. Maps to Mosca's Y. */
   migrationYears: number;
+  /** Years the data must remain secret (security shelf life). Maps to Mosca's X. */
   sensitivityYears: number;
+  /** Years until a cryptographically relevant quantum computer. Mosca's Z. */
   qDayYears: number;
 }
 
 export interface MoscaResult {
+  /** X = security shelf life (years data must stay secret). */
   X: number;
+  /** Y = migration time (years to deploy PQC). */
   Y: number;
+  /** Z = collapse time (years until Q-Day). */
   Z: number;
   XplusY: number;
   atRisk: boolean;
@@ -113,8 +119,12 @@ function buildExplanation(
 }
 
 export function computeMosca(input: MoscaInput, currentYear: number): MoscaResult {
-  const X = input.migrationYears;
-  const Y = input.sensitivityYears;
+  // Canonical Mosca convention (matches the sibling harvest-timeline lab):
+  //   X = security shelf life (years the data must stay secret)
+  //   Y = migration time (years to deploy PQC)
+  //   Z = collapse time  (years until a cryptographically relevant quantum computer)
+  const X = input.sensitivityYears;
+  const Y = input.migrationYears;
   const Z = input.qDayYears;
 
   const XplusY = X + Y;
@@ -131,7 +141,7 @@ export function computeMosca(input: MoscaInput, currentYear: number): MoscaResul
     riskLevel: toRiskLevel(riskMargin),
     explanation: buildExplanation(atRisk, riskMargin, XplusY, Z),
     dataExposureYear: currentYear + Z,
-    // Latest year migration can START and still finish (it takes X years) before Q-Day.
-    migrationDeadline: currentYear + (Z - X),
+    // Latest year migration can START and still finish (it takes Y years) before Q-Day.
+    migrationDeadline: currentYear + (Z - Y),
   };
 }

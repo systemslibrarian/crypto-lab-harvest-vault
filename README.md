@@ -17,6 +17,14 @@ with sector-specific presets, an interactive HNDL timeline from 2013
 through the Q-Day probability window, and a sector risk matrix across
 healthcare, government, finance, legal, library, and enterprise.
 
+The calculator uses Mosca's canonical variable convention (matching the
+companion `crypto-lab-harvest-timeline`): **X** = data security shelf life
+(years the data must stay secret), **Y** = migration time (years to deploy
+PQC), and **Z** = the years until a cryptographically relevant quantum
+computer. Because the risk condition is the symmetric sum `X + Y > Z`, the
+verdict never depends on which lever is which — but the labels do, so they
+match the literature.
+
 ## When to Use It
 
 - Explaining to leadership why PQC migration is urgent NOW, not when

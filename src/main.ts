@@ -69,11 +69,13 @@ function parseStateFromUrl(): void {
     selectedSector = 'custom';
   }
 
+  // URL uses the canonical Mosca convention: x = data shelf life (X),
+  // y = migration time (Y), z = years to Q-Day (Z).
   const x = Number(p.get('x'));
   const y = Number(p.get('y'));
   const z = Number(p.get('z'));
-  if (p.has('x') && Number.isFinite(x)) migrationYears = clamp(Math.round(x), 1, 15);
-  if (p.has('y') && Number.isFinite(y)) sensitivityYears = clamp(Math.round(y), 1, 80);
+  if (p.has('x') && Number.isFinite(x)) sensitivityYears = clamp(Math.round(x), 1, 80);
+  if (p.has('y') && Number.isFinite(y)) migrationYears = clamp(Math.round(y), 1, 15);
   if (p.has('z') && Number.isFinite(z)) qDayYears = clamp(Math.round(z), 1, 20);
 
   // Reconcile: keep the named sector only if the values still match its preset;
@@ -93,8 +95,8 @@ function parseStateFromUrl(): void {
 function syncUrl(): void {
   const p = new URLSearchParams();
   p.set('sector', selectedSector);
-  p.set('x', String(migrationYears));
-  p.set('y', String(sensitivityYears));
+  p.set('x', String(sensitivityYears));
+  p.set('y', String(migrationYears));
   p.set('z', String(qDayYears));
   window.history.replaceState(null, '', `${window.location.pathname}?${p.toString()}`);
 }
@@ -704,7 +706,7 @@ function verdictText(m: MoscaResult): string {
 // <pre> and the clipboard copy, so they can never drift apart.
 function briefText(): string {
   const m = moscaForState();
-  const neededStart = m.dataExposureYear - m.X;
+  const neededStart = m.dataExposureYear - m.Y;
   const behind = CURRENT_YEAR - neededStart;
   const sign = m.XplusY > m.Z ? '>' : m.XplusY === m.Z ? '=' : '<';
   const schedule =
@@ -719,8 +721,8 @@ function briefText(): string {
     `Source: Harvest Now, Decrypt Later visualizer (educational; Q-Day is a range, not a date).`,
     ``,
     `INPUTS`,
-    `  X  migration time .............. ${m.X} years`,
-    `  Y  data sensitivity lifetime ... ${m.Y} years`,
+    `  X  data sensitivity lifetime ... ${m.X} years`,
+    `  Y  migration time .............. ${m.Y} years`,
     `  Z  Q-Day estimate .............. ${m.Z} years (~${m.dataExposureYear})`,
     ``,
     `MOSCA'S THEOREM`,
@@ -755,14 +757,14 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
 }
 
 function verdictInner(mosca: MoscaResult): string {
-  const neededStart = mosca.dataExposureYear - mosca.X;
+  const neededStart = mosca.dataExposureYear - mosca.Y;
   const yearsBehind = CURRENT_YEAR - neededStart;
   const sign = mosca.XplusY > mosca.Z ? '>' : mosca.XplusY === mosca.Z ? '=' : '<';
-  // Data encrypted *today* has sensitivity Y, so it outlives Q-Day by Y - Z.
+  // Data encrypted *today* has shelf life X, so it outlives Q-Day by X - Z.
   // The full X + Y - Z margin applies to data encrypted at the END of migration.
-  const todayMargin = mosca.Y - mosca.Z;
+  const todayMargin = mosca.X - mosca.Z;
   const atRiskBody = mosca.atRisk
-    ? `Data encrypted during your ${mosca.X}-year migration stays sensitive up to ${mosca.riskMargin} year(s) past Q-Day${
+    ? `Data encrypted during your ${mosca.Y}-year migration stays sensitive up to ${mosca.riskMargin} year(s) past Q-Day${
         todayMargin > 0 ? `; data encrypted today alone outlives Q-Day by ${todayMargin} year(s)` : ''
       }. An adversary collecting now can read it later.`
     : `Current buffer: migration and data sensitivity both complete ${Math.abs(mosca.riskMargin)} year(s) before this Q-Day estimate.`;
@@ -792,8 +794,8 @@ function refreshDynamic(): void {
   const qDayYearAbsolute = CURRENT_YEAR + qDayYears;
   const mosca = computeMosca({ migrationYears, sensitivityYears, qDayYears }, CURRENT_YEAR);
 
-  setText('#x-value', String(migrationYears));
-  setText('#y-value', String(sensitivityYears));
+  setText('#x-value', String(sensitivityYears));
+  setText('#y-value', String(migrationYears));
   setText('#z-value', String(qDayYears));
   setText('#z-year', String(qDayYearAbsolute));
 
@@ -855,17 +857,18 @@ function renderApp(): void {
         ${createActStrip()}
 
         <div class="counter-box">
+          <p class="counter-caption">Illustrative scale figure ${confidenceBadge('illustrative')}</p>
           ${
             prefersReducedMotion
-              ? `<p>RSA/ECC-encrypted traffic harvestable worldwide, every second:</p>
+              ? `<p>RSA/ECC-encrypted traffic harvestable worldwide, roughly, every second:</p>
           <p class="counter-value">~${TRAFFIC_TB_PER_SECOND} TB / second</p>`
-              : `<p>Data encrypted with RSA/ECC since this page loaded:</p>
+              : `<p>Data encrypted with RSA/ECC since this page loaded (illustrative rate):</p>
           <p class="counter-value"><span id="traffic-counter">${storageCounterTb.toLocaleString('en-US', {
             maximumFractionDigits: 0,
           })}</span> TB</p>`
           }
-          <p>Estimated storage cost for a nation-state actor: $0.002</p>
-          <p class="small-note">Source: Global internet traffic ~5 Exabytes/day. RSA/ECC: ~40% of HTTPS. Illustrative - for scale.</p>
+          <p>Illustrative storage cost for a nation-state actor: $0.002</p>
+          <p class="small-note">Order-of-magnitude estimate, not a measurement: global internet traffic ~5 Exabytes/day, RSA/ECC ~40% of HTTPS. It conveys scale, not any specific actor's real collection rate.</p>
         </div>
       </section>
 
@@ -960,13 +963,13 @@ function renderApp(): void {
         <div class="sector-tabs" role="group" aria-label="Sector selector">${createSectorTabs()}</div>
 
         <div class="sliders">
-          <label for="x-slider">X - Migration time (years to complete PQC transition): <span id="x-value">${migrationYears}</span> years</label>
-          <input id="x-slider" type="range" min="1" max="15" value="${migrationYears}" aria-valuemin="1" aria-valuemax="15" aria-valuenow="${migrationYears}" aria-valuetext="${migrationYears} years" />
-          <p class="small-note">How long will it take your organization to fully deploy post-quantum cryptography?</p>
-
-          <label for="y-slider">Y - Data sensitivity lifetime (years data must remain secret): <span id="y-value">${sensitivityYears}</span> years</label>
-          <input id="y-slider" type="range" min="1" max="80" value="${sensitivityYears}" aria-valuemin="1" aria-valuemax="80" aria-valuenow="${sensitivityYears}" aria-valuetext="${sensitivityYears} years" />
+          <label for="x-slider">X - Data sensitivity lifetime (years data must remain secret): <span id="x-value">${sensitivityYears}</span> years</label>
+          <input id="x-slider" type="range" min="1" max="80" value="${sensitivityYears}" aria-valuemin="1" aria-valuemax="80" aria-valuenow="${sensitivityYears}" aria-valuetext="${sensitivityYears} years" />
           <p class="small-note">How long must this data stay confidential? Genetic data can exceed 80 years.</p>
+
+          <label for="y-slider">Y - Migration time (years to complete PQC transition): <span id="y-value">${migrationYears}</span> years</label>
+          <input id="y-slider" type="range" min="1" max="15" value="${migrationYears}" aria-valuemin="1" aria-valuemax="15" aria-valuenow="${migrationYears}" aria-valuetext="${migrationYears} years" />
+          <p class="small-note">How long will it take your organization to fully deploy post-quantum cryptography?</p>
 
           <label for="z-slider">Z - Q-Day estimate (years until cryptographically relevant quantum computer): <span id="z-value">${qDayYears}</span> years (<span id="z-year">${qDayYearAbsolute}</span>)</label>
           <input id="z-slider" type="range" min="1" max="20" value="${qDayYears}" aria-valuemin="1" aria-valuemax="20" aria-valuenow="${qDayYears}" aria-valuetext="${qDayYears} years" />
@@ -1132,16 +1135,16 @@ function renderApp(): void {
   // Slider input updates the DOM in place (refreshDynamic) rather than re-rendering
   // the whole app — re-rendering would replace the <input> mid-drag and break the gesture.
   xSlider?.addEventListener('input', () => {
-    migrationYears = Number(xSlider.value);
+    sensitivityYears = Number(xSlider.value);
     selectedSector = 'custom';
-    updateSlider(xSlider, migrationYears);
+    updateSlider(xSlider, sensitivityYears);
     refreshDynamic();
   });
 
   ySlider?.addEventListener('input', () => {
-    sensitivityYears = Number(ySlider.value);
+    migrationYears = Number(ySlider.value);
     selectedSector = 'custom';
-    updateSlider(ySlider, sensitivityYears);
+    updateSlider(ySlider, migrationYears);
     refreshDynamic();
   });
 

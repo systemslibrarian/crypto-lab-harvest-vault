@@ -137,7 +137,7 @@ export const SECTOR_RATIONALE: Record<string, string> = {
   enterprise:
     'Lower sensitivity (~10 years) and faster migration make it the closest to safe, but roadmaps still outlast an optimistic Z.',
   personal:
-    'You can switch providers quickly (small X), but financial and health records keep multi-year sensitivity (Y).',
+    'You can switch providers quickly (small Y), but financial and health records keep multi-year sensitivity (large X).',
 };
 
 export interface ZScenario {
@@ -194,7 +194,7 @@ export interface GlossaryTerm {
 export const GLOSSARY: GlossaryTerm[] = [
   { term: 'HNDL', def: 'Harvest Now, Decrypt Later — collecting encrypted data today to decrypt once quantum computers arrive.' },
   { term: 'Q-Day', def: 'The (uncertain) day a cryptographically relevant quantum computer can break RSA/ECC. A probability range, not a fixed date.' },
-  { term: 'Mosca’s theorem', def: 'You have a problem when X (migration time) + Y (data sensitivity lifetime) exceeds Z (years until Q-Day).' },
+  { term: 'Mosca’s theorem', def: 'You have a problem when X (data sensitivity lifetime) + Y (migration time) exceeds Z (years until Q-Day).' },
   { term: 'PQC', def: 'Post-Quantum Cryptography — algorithms designed to resist quantum attacks (e.g. ML-KEM, ML-DSA).' },
   { term: 'PFS', def: 'Perfect Forward Secrecy — ephemeral per-session keys, so compromising a long-term key doesn’t expose past sessions.' },
   { term: 'ML-KEM (FIPS 203)', def: 'NIST-standardized post-quantum key-encapsulation mechanism (formerly Kyber).' },
@@ -251,7 +251,7 @@ export interface QuizQuestion {
 // Retrieval practice, not an exam — five questions covering the core lesson.
 export const QUIZ: QuizQuestion[] = [
   {
-    q: 'Data must stay secret for 20 years (Y=20), migration takes 6 (X=6), Q-Day is ~10 years out (Z=10). What does Mosca’s theorem say?',
+    q: 'Data must stay secret for 20 years (X=20), migration takes 6 (Y=6), Q-Day is ~10 years out (Z=10). What does Mosca’s theorem say?',
     options: [
       'At risk — X + Y (26) is greater than Z (10)',
       'Safe — large quantum computers don’t exist yet',
@@ -295,15 +295,15 @@ export const QUIZ: QuizQuestion[] = [
     explain: 'Shor breaks the public-key handshake. AES-256 and SHA-2 are only weakened by Grover and remain safe at doubled key sizes.',
   },
   {
-    q: 'Two organizations both hold data with Y=30, and Q-Day is ~10 years out. Org A finishes migration in 3 years; Org B takes 9. Who is better positioned?',
+    q: 'Two organizations both hold data with X=30, and Q-Day is ~10 years out. Org A finishes migration in 3 years; Org B takes 9. Who is better positioned?',
     options: [
-      'Org A — smaller X means it crosses the line by less and closes the window sooner',
+      'Org A — smaller Y means it crosses the line by less and closes the window sooner',
       'Org B — taking longer to migrate is safer',
       'Identical — only Y matters',
       'Neither — AES-256 protects both',
     ],
     correct: 0,
-    explain: 'Both are at risk (X + Y > Z), but Org A’s exposure past Q-Day is smaller (33 vs 39) and its window closes years earlier. Cutting migration time (X) is a real lever.',
+    explain: 'Both are at risk (X + Y > Z), but Org A’s exposure past Q-Day is smaller (33 vs 39) and its window closes years earlier. Cutting migration time (Y) is a real lever.',
   },
 ];
 
