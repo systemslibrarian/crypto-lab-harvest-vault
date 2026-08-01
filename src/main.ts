@@ -861,7 +861,7 @@ function renderApp(): void {
       </header>
       ${createProgressNav()}
       <section class="panel hero-panel" id="threat">
-        <p class="hero-headline">The breach has already happened.<br/>You just don't know it yet.</p>
+        <h2 class="hero-headline">The breach has already happened.<br/>You just don't know it yet.</h2>
         <p class="lead">Adversaries are collecting your encrypted communications today. RSA and ECC cannot be broken now - but they will be. When quantum computers arrive, every stored ciphertext becomes readable.</p>
         <p class="lead">This is Harvest Now, Decrypt Later. It is not a future threat. It is a present collection strategy.</p>
 
@@ -952,7 +952,7 @@ function renderApp(): void {
             ${createTimelineMarkers()}
           </div>
         </div>
-        <div class="timeline-list" aria-label="Timeline mobile list">${createTimelineList()}</div>
+        <div class="timeline-list" role="group" aria-label="Timeline mobile list">${createTimelineList()}</div>
         <article id="timeline-details" class="timeline-details" tabindex="-1">
           <h3>${timelineSorted[selectedEventIndex]?.label ?? 'Timeline event'}</h3>
           <p>${timelineSorted[selectedEventIndex]?.description ?? ''}</p>
@@ -1014,7 +1014,7 @@ function renderApp(): void {
           <button type="button" id="copy-brief" class="action-btn">Copy brief</button>
           <button type="button" id="print-brief" class="action-btn">Print / Save as PDF</button>
         </div>
-        <pre class="brief-pre" id="brief-pre" tabindex="0" aria-label="Generated risk brief">${escapeHtml(briefText())}</pre>
+        <pre class="brief-pre" id="brief-pre" tabindex="0" role="group" aria-label="Generated risk brief">${escapeHtml(briefText())}</pre>
       </section>
 
       <section class="panel matrix-panel" id="mitigations">
