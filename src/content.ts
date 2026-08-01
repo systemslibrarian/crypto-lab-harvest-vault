@@ -65,8 +65,9 @@ export const SOURCES: SourceItem[] = [
     claim: 'Quantum resource estimates are falling fast.',
     confidence: 'estimate',
     detail:
-      'Gidney 2025: RSA-2048 with under 1M qubits (down from ~20M in 2019). Google 2026: a 256-bit elliptic-curve discrete log with ~500K qubits. Oratomic 2026: RSA-2048 in ~97 days with ~100K qubits. These are circuit/resource estimates, not working machines.',
-    source: 'arXiv 2505.15917 (Gidney); 2603.28846 (Google); 2603.28627 (Oratomic)',
+      'Gidney 2025: RSA-2048 in under a week with fewer than 1M noisy qubits (down from ~20M qubits / 8 hours in 2019). Babbush et al. 2026 (Google Quantum AI, Ethereum Foundation, Stanford): the 256-bit elliptic-curve discrete log in fewer than 1200 logical qubits, executing in minutes on a superconducting architecture with under half a million physical qubits. Cain et al. 2026: Shor at cryptographically relevant scale on as few as 10,000 reconfigurable neutral-atom qubits — P-256 discrete log in a few days at 26,000 physical qubits, RSA-2048 one to two orders of magnitude longer. These are circuit/resource estimates, not working machines.',
+    source:
+      'arXiv 2505.15917 (Gidney); arXiv 2603.28846 (Babbush et al.); arXiv 2603.28627 (Cain et al.)',
     url: 'https://arxiv.org/abs/2505.15917',
   },
   {
