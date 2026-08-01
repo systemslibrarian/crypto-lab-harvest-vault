@@ -57,8 +57,8 @@ export const SOURCES: SourceItem[] = [
     claim: 'Governments have set hard PQC migration deadlines.',
     confidence: 'confirmed',
     detail:
-      'NSA CNSA 2.0 expects new national-security systems to comply from 2027 and full transition by 2035. June 2026 US executive orders direct federal agencies to migrate critical systems to PQC key establishment by 2030 and signatures by 2031.',
-    source: 'NSA CNSA 2.0; White House Presidential Actions (June 22, 2026)',
+      'NSA CNSA 2.0 expects new national-security systems to comply from 2027, and its per-category exclusive-use dates run 2030 (software/firmware signing, traditional networking equipment) through 2033 (browsers/servers and cloud services, operating systems, niche equipment, custom and legacy applications). 2035 is a different marker: NSA\'s stated goal that all NSS be quantum-resistant by then, in alignment with NSM-10 — not a CNSA 2.0 category deadline. June 2026 US executive orders direct federal agencies to migrate critical systems to PQC key establishment by 2030 and signatures by 2031.',
+    source: 'NSA, CNSA 2.0 and Quantum Computing FAQ v2.0 (April 2024); NSM-10; White House Presidential Actions (June 22, 2026)',
     url: 'https://www.whitehouse.gov/presidential-actions/2026/06/securing-the-nation-against-advanced-cryptographic-attacks/',
   },
   {

@@ -120,9 +120,10 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
   },
   {
     year: 2035,
-    label: 'NSA CNSA 2.0 full transition deadline',
+    label: 'NSA goal: all NSS quantum-resistant (NSM-10 alignment)',
     category: 'migration',
     description:
-      'All NSA national security systems must be fully PQC-migrated. Data encrypted before 2035 under classical crypto may be retroactively compromised.',
+      'Not a CNSA 2.0 category deadline. CNSA 2.0\'s own exclusive-use dates complete earlier: 2030 for software/firmware signing and traditional networking equipment, 2033 for web browsers/servers and cloud services, operating systems, and niche equipment, with custom applications and legacy equipment to be updated or replaced by 2033. 2035 is the overarching goal for national security systems: "NSA intends that all NSS will be quantum-resistant by 2035, in accordance with the goal espoused in NSM-10." NSM-10 is the government-wide memorandum; NSA restates its target to match it. Data encrypted before then under classical crypto may still be retroactively compromised.',
+    source: 'NSA, CNSA 2.0 and Quantum Computing FAQ, Ver. 2.0 (April 2024); NSM-10 (May 2022).',
   },
 ];

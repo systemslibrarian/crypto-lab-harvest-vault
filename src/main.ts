@@ -397,7 +397,8 @@ const mitigationCards = [
       'ML-DSA (FIPS 204) for digital signatures',
       'Protects future communications',
       'Cannot retroactively protect already-harvested data',
-      'Timeline: begin immediately. NSA deadline: 2035.',
+      'Timeline: begin immediately. CNSA 2.0 exclusive-use dates land 2030-2033',
+      'NSA goal of all NSS quantum-resistant by 2035 is NSM-10 alignment, not a CNSA 2.0 date',
     ],
   },
   {
