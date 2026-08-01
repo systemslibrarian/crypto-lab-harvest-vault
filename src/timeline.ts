@@ -33,7 +33,7 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
     label: 'NSA CNSA 2.0 mandated',
     category: 'migration',
     description:
-      'NSA mandates transition to post-quantum algorithms for all national security systems. New systems: PQC required immediately.',
+      'NSA announces the CNSA 2.0 suite and a phased transition timeline for national security systems — not an immediate cutover: software/firmware signing starts first, with new NSS acquisitions expected to be CNSA 2.0-compliant from January 1, 2027.',
   },
   {
     year: 2024,

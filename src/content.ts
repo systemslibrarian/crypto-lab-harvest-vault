@@ -216,7 +216,7 @@ export const ACTION_PLAN: ActionPhase[] = [
     timeframe: 'First 30 days',
     items: [
       'Inventory public-key cryptography: TLS, VPN, SSH, S/MIME, code signing, certificates, APIs, backups, vendor links.',
-      'Identify your long-sensitivity data flows — the high-Y systems.',
+      'Identify your long-sensitivity data flows — the high-X systems.',
       'Turn on TLS 1.3 and forward secrecy wherever it is missing.',
       'Ask your key vendors for their PQC roadmaps in writing.',
     ],
