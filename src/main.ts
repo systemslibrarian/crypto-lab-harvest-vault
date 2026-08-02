@@ -1,6 +1,17 @@
 import './style.css';
 import { computeMosca, SECTOR_PRESETS, type MoscaResult } from './mosca';
 import { TIMELINE_EVENTS, type TimelineEvent } from './timeline';
+import { RLWE_KEYSPACE_LOG10, RLWE_N, RLWE_Q } from './lattice';
+import {
+  DH_ORDER,
+  DH_P,
+  attackCapture,
+  sendSession,
+  toHex,
+  type AttackResult,
+  type Mode,
+  type SentSession,
+} from './transcript';
 import {
   SOURCES,
   THREAT_MODEL,
@@ -533,9 +544,10 @@ const STEP_MAP: { id: string; label: string }[] = [
   { id: 'threat', label: '1 · Harvested' },
   { id: 'whatbreaks', label: '2 · What breaks' },
   { id: 'timeline', label: '3 · Why time' },
-  { id: 'mosca', label: '4 · Your risk' },
-  { id: 'mitigations', label: '5 · Mitigate' },
-  { id: 'quiz', label: '6 · Check' },
+  { id: 'capture', label: '4 · Prove it' },
+  { id: 'mosca', label: '5 · Your risk' },
+  { id: 'mitigations', label: '6 · Mitigate' },
+  { id: 'quiz', label: '7 · Check' },
 ];
 let scrollSpy: IntersectionObserver | null = null;
 // Index into timelineSorted (the array every consumer renders from), not the
@@ -546,6 +558,284 @@ let selectedEventIndex = Math.max(
   0,
 );
 let storageCounterTb = 0;
+
+// ---------------------------------------------------------------------------
+// The capture-then-upgrade exhibit. State lives at module scope because
+// renderApp() rebuilds the whole DOM on unrelated interactions (theme, sector,
+// timeline) — the adversary's store has to survive those, exactly like a real
+// adversary's store survives everything you do afterwards.
+// ---------------------------------------------------------------------------
+
+const DH_BITS = Math.ceil(Math.log2(DH_P));
+const DEFAULT_CAPTURE_MESSAGE = 'Patron 4471 borrowed "Fahrenheit 451" on 2026-08-02';
+const CAPTURE_IDLE_STATUS =
+  'Nothing captured yet. Send a session to put real ciphertext in the adversary’s store.';
+
+let captureMessage = DEFAULT_CAPTURE_MESSAGE;
+let captureSessions: SentSession[] = [];
+let captureAttack: AttackResult[] | null = null;
+let captureUpgradedAt: number | null = null;
+let captureBusy = false;
+let captureStatus = CAPTURE_IDLE_STATUS;
+
+function captureMode(): Mode {
+  return captureUpgradedAt === null ? 'classical' : 'hybrid';
+}
+
+function clockTime(ms: number): string {
+  return new Date(ms).toLocaleTimeString('en-US', { hour12: false });
+}
+
+function modeLabel(mode: Mode): string {
+  return mode === 'hybrid' ? 'Hybrid — DH + Ring-LWE' : 'Classical — DH only';
+}
+
+function captureQDayCell(session: SentSession, result: AttackResult | undefined): string {
+  if (!result) {
+    return '<span class="small-note">not attacked yet</span>';
+  }
+  const took = result.elapsedMs < 1 ? 'under 1 ms' : `${Math.round(result.elapsedMs)} ms`;
+  const work = `${result.steps.toLocaleString('en-US')} exponents tried in ${took}`;
+  if (result.recovered) {
+    const identical = result.plaintext === session.plaintext;
+    const untouched = result.fingerprint === session.fingerprint;
+    return `<span class="cap-verdict cap-recovered">RECOVERED</span>
+      <q class="cap-plain">${escapeHtml(result.plaintext ?? '')}</q>
+      <span class="small-note">${
+        identical ? 'byte-identical to what was sent' : 'DIFFERS from what was sent'
+      } · stored bytes ${untouched ? 'unchanged since capture' : 'CHANGED since capture'} · ${work}</span>`;
+  }
+  return `<span class="cap-verdict cap-survived">NOT RECOVERED</span>
+    <span class="small-note">${escapeHtml(result.failure ?? 'unknown failure')} · ${work}</span>`;
+}
+
+function captureRow(session: SentSession, result: AttackResult | undefined, index: number): string {
+  return `
+    <tr>
+      <th scope="row">${index + 1}</th>
+      <td>${clockTime(session.capture.capturedAt)}</td>
+      <td>${modeLabel(session.capture.mode)}</td>
+      <td class="cap-bytes">
+        <span class="cap-hex">${toHex(session.capture.ciphertext).slice(0, 24)}…</span>
+        <span class="small-note">SHA-256 ${session.fingerprint.slice(0, 16)}…</span>
+      </td>
+      <td>${captureQDayCell(session, result)}</td>
+    </tr>`;
+}
+
+// Every sentence below is assembled from the run that just happened: counts come
+// from the attack results, not from what the page expected to be true.
+function captureVerdictInner(): string {
+  if (!captureAttack) return '';
+  const paired = captureSessions.map((session, i) => ({ session, result: captureAttack![i] }));
+  const before = paired.filter((p) => p.session.capture.mode === 'classical');
+  const after = paired.filter((p) => p.session.capture.mode === 'hybrid');
+  const beforeRecovered = before.filter((p) => p.result.recovered);
+  const afterRecovered = after.filter((p) => p.result.recovered);
+  const identical = beforeRecovered.filter((p) => p.result.plaintext === p.session.plaintext);
+  const untouched = paired.filter((p) => p.result.fingerprint === p.session.fingerprint);
+  const steps = captureAttack.reduce((n, r) => n + r.steps, 0);
+  const elapsed = captureAttack.reduce((n, r) => n + r.elapsedMs, 0);
+  const atRisk = beforeRecovered.length > 0;
+
+  const lines: string[] = [];
+  if (captureUpgradedAt === null) {
+    lines.push(
+      `No upgrade has been deployed, so all ${paired.length} session(s) used the classical handshake. Q-Day recovered ${beforeRecovered.length} of ${before.length}.`,
+    );
+  } else {
+    lines.push(
+      `PQC upgrade deployed at ${clockTime(captureUpgradedAt)}. Captured before it: ${before.length} session(s), of which Q-Day recovered <strong>${beforeRecovered.length}</strong>. Captured after it: ${after.length} session(s), of which Q-Day recovered <strong>${afterRecovered.length}</strong>.`,
+    );
+  }
+  if (before.length > 0 && beforeRecovered.length === before.length) {
+    lines.push(
+      `The upgrade did not un-capture anything. All ${beforeRecovered.length} pre-upgrade session(s) came back, ${identical.length} of them byte-identical to what was sent.`,
+    );
+  }
+  if (after.length > 0 && afterRecovered.length === 0) {
+    lines.push(
+      `Every post-upgrade session survived — and not because the attacker gave up. It solved the discrete log for those handshakes too; the lattice half of the key simply never appeared in the transcript, so AES-GCM rejected the derived key.`,
+    );
+  }
+  lines.push(
+    `${untouched.length} of ${paired.length} stored record(s) hash to exactly what they hashed at capture time: nothing you did afterwards touched the copy.`,
+  );
+  lines.push(
+    `Attacker effort: ${steps.toLocaleString('en-US')} candidate exponents in ${Math.round(elapsed)} ms across ${paired.length} record(s), out of ${DH_ORDER.toLocaleString('en-US')} possible. The Ring-LWE secret it would also need has about 10<sup>${Math.round(RLWE_KEYSPACE_LOG10)}</sup> candidates — that one is not a matter of waiting longer.`,
+  );
+
+  return `<article class="capture-verdict ${atRisk ? 'at-risk' : 'ok'}">
+    <h3>What this run showed</h3>
+    ${lines.map((line) => `<p>${line}</p>`).join('')}
+  </article>`;
+}
+
+function captureBodyInner(): string {
+  if (captureSessions.length === 0) {
+    return `<p class="capture-empty">The adversary’s store is empty. Send a session and the two public keys, the nonce and the ciphertext are copied here — exactly what a passive wiretap sees, and nothing more. Your plaintext is never in the copy.</p>`;
+  }
+  const rows = captureSessions
+    .map((session, i) => captureRow(session, captureAttack?.[i], i))
+    .join('');
+  return `
+    <div class="capture-table-wrap">
+      <table class="capture-table">
+        <caption>The adversary’s store — ${captureSessions.length} captured session(s), held as bytes only</caption>
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Captured</th>
+            <th scope="col">Handshake</th>
+            <th scope="col">Stored bytes</th>
+            <th scope="col">At Q-Day</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    ${captureVerdictInner()}`;
+}
+
+function refreshCapture(): void {
+  const body = document.querySelector<HTMLElement>('#capture-body');
+  if (body) body.innerHTML = captureBodyInner();
+  setText('#capture-status', captureStatus);
+
+  const send = document.querySelector<HTMLButtonElement>('#send-session');
+  if (send) {
+    send.disabled = captureBusy;
+    send.textContent =
+      captureMode() === 'hybrid' ? 'Send over the hybrid handshake' : 'Send over the classical handshake';
+  }
+  const deploy = document.querySelector<HTMLButtonElement>('#deploy-pqc');
+  if (deploy) {
+    deploy.disabled = captureBusy || captureUpgradedAt !== null;
+    deploy.textContent =
+      captureUpgradedAt === null
+        ? 'Deploy the PQC upgrade'
+        : `PQC upgrade deployed ${clockTime(captureUpgradedAt)}`;
+  }
+  const qday = document.querySelector<HTMLButtonElement>('#run-qday');
+  if (qday) qday.disabled = captureBusy || captureSessions.length === 0;
+  const reset = document.querySelector<HTMLButtonElement>('#reset-capture');
+  if (reset) reset.disabled = captureBusy;
+}
+
+async function handleSendSession(): Promise<void> {
+  if (captureBusy) return;
+  captureBusy = true;
+  const input = document.querySelector<HTMLInputElement>('#capture-message');
+  const typed = (input?.value ?? '').trim();
+  captureMessage = typed.length > 0 ? typed : DEFAULT_CAPTURE_MESSAGE;
+  if (input) input.value = captureMessage;
+  const mode = captureMode();
+  captureStatus = `Running a ${mode} handshake and encrypting the message…`;
+  refreshCapture();
+  try {
+    const session = await sendSession(captureMessage, mode, captureSessions.length);
+    captureSessions = [...captureSessions, session];
+    // New evidence invalidates the previous attack — never show a verdict that
+    // was computed against a different store.
+    captureAttack = null;
+    captureStatus = `Session ${captureSessions.length} captured over the ${mode} handshake. ${captureSessions.length} record(s) in the store; none attacked yet.`;
+  } catch (error) {
+    captureStatus = `Handshake failed: ${(error as Error).message}`;
+  }
+  captureBusy = false;
+  refreshCapture();
+}
+
+function handleDeployPqc(): void {
+  if (captureBusy || captureUpgradedAt !== null) return;
+  captureUpgradedAt = Date.now();
+  captureAttack = null;
+  captureStatus = `PQC upgrade deployed at ${clockTime(captureUpgradedAt)}. New sessions now use the hybrid handshake. The ${captureSessions.length} record(s) already in the store are unchanged.`;
+  refreshCapture();
+}
+
+async function handleRunQDay(): Promise<void> {
+  if (captureBusy || captureSessions.length === 0) return;
+  captureBusy = true;
+  captureAttack = null;
+  captureStatus = 'Q-Day: searching for the private exponent behind every captured handshake…';
+  refreshCapture();
+  // Yield once so the status paints before the (blocking) exhaustive search.
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
+  const results: AttackResult[] = [];
+  for (const session of captureSessions) {
+    results.push(await attackCapture(session.capture));
+  }
+  captureAttack = results;
+  const recovered = results.filter((r) => r.recovered).length;
+  captureStatus = `Q-Day complete: ${recovered} of ${results.length} captured session(s) recovered.`;
+  captureBusy = false;
+  refreshCapture();
+}
+
+function handleResetCapture(): void {
+  if (captureBusy) return;
+  captureSessions = [];
+  captureAttack = null;
+  captureUpgradedAt = null;
+  captureMessage = DEFAULT_CAPTURE_MESSAGE;
+  const input = document.querySelector<HTMLInputElement>('#capture-message');
+  if (input) input.value = captureMessage;
+  captureStatus = CAPTURE_IDLE_STATUS;
+  refreshCapture();
+}
+
+function createCaptureSection(): string {
+  return `
+      <section class="panel capture-panel" id="capture">
+        <h2>PROVE IT: CAPTURE A HANDSHAKE, THEN UPGRADE</h2>
+        <p class="lead">Everything above this line is arithmetic about calendars. This part is cryptography, run here, in this tab: a real key exchange, a real wiretap copy of it, and a real break against that copy. Then you deploy the upgrade — <em>after</em> the capture — and watch what it does and does not reach.</p>
+        <p class="capture-scale small-note"><strong>Toy scale, stated plainly.</strong> The classical handshake is Diffie–Hellman in a ${DH_BITS}-bit group (p = ${DH_P.toLocaleString('en-US')}), chosen small enough that the attacker below can exhaust every exponent while you watch. Real DH uses 2048-bit groups or 256-bit curves, where exhaustive search is hopeless — Shor's algorithm is what breaks those, and it does not search. The upgrade mixes in a Ring-LWE KEM at n = ${RLWE_N}, q = ${RLWE_Q}: the mechanism ML-KEM (FIPS 203) is built from, at teaching size, IND-CPA only, unreviewed. Neither is production cryptography. The retroactivity it demonstrates is exact at any size.</p>
+        <div class="capture-controls no-print">
+          <label for="capture-message">Message to send</label>
+          <input id="capture-message" type="text" maxlength="120" value="${escapeHtml(captureMessage)}" />
+          <div class="capture-buttons">
+            <button type="button" class="action-btn" id="send-session">${
+              captureMode() === 'hybrid'
+                ? 'Send over the hybrid handshake'
+                : 'Send over the classical handshake'
+            }</button>
+            <button type="button" class="action-btn" id="deploy-pqc"${
+              captureUpgradedAt !== null ? ' disabled' : ''
+            }>${
+              captureUpgradedAt === null
+                ? 'Deploy the PQC upgrade'
+                : `PQC upgrade deployed ${clockTime(captureUpgradedAt)}`
+            }</button>
+            <button type="button" class="action-btn" id="run-qday"${
+              captureSessions.length === 0 ? ' disabled' : ''
+            }>Run Q-Day</button>
+            <button type="button" class="action-btn small" id="reset-capture">Reset exhibit</button>
+          </div>
+        </div>
+        <p class="capture-status" id="capture-status" role="status" aria-live="polite">${escapeHtml(captureStatus)}</p>
+        <div id="capture-body">${captureBodyInner()}</div>
+        ${checkpoint(
+          'why does the order of the two buttons change the outcome?',
+          'Because the store is bytes, and bytes do not get re-encrypted. Deploying the upgrade first means the session that follows carries a lattice secret the transcript never reveals, so the break stops at the discrete log. Deploying it after means the recorded session was already complete — the upgrade protects the next message, not the last one. Send, upgrade, send, then run Q-Day and read the two rows side by side.',
+        )}
+      </section>`;
+}
+
+function wireCaptureSection(): void {
+  document.querySelector<HTMLButtonElement>('#send-session')?.addEventListener('click', () => {
+    void handleSendSession();
+  });
+  document
+    .querySelector<HTMLButtonElement>('#deploy-pqc')
+    ?.addEventListener('click', handleDeployPqc);
+  document.querySelector<HTMLButtonElement>('#run-qday')?.addEventListener('click', () => {
+    void handleRunQDay();
+  });
+  document
+    .querySelector<HTMLButtonElement>('#reset-capture')
+    ?.addEventListener('click', handleResetCapture);
+}
 
 function getEventPosition(year: number): number {
   return ((year - timelineMin) / (timelineMax - timelineMin)) * 100;
@@ -970,6 +1260,8 @@ function renderApp(): void {
         )}
       </section>
 
+      ${createCaptureSection()}
+
       <section class="panel calculator-panel" id="mosca">
         <h2>MOSCA'S THEOREM: X + Y &gt; Z</h2>
         <div class="sector-tabs" role="group" aria-label="Sector selector">${createSectorTabs()}</div>
@@ -1088,6 +1380,15 @@ function renderApp(): void {
     </main>
 
     <footer>
+      <p class="lab-scope"><strong>What this lab is for, and what its companion is for.</strong>
+        Two labs here work the same theorem, deliberately. <em>This</em> one is the threat lab:
+        it argues that harvested traffic is already lost, and then proves the mechanism by
+        capturing a live handshake in your browser and breaking it after the fact. Its output is
+        a verdict about <em>your</em> data —
+        <a href="https://systemslibrarian.github.io/crypto-lab-harvest-timeline/" target="_blank" rel="noopener">crypto-lab-harvest-timeline</a>
+        is the planning lab: it takes a fleet of systems with different shelf lives and migration
+        costs and projects which of them cross Q-Day unprotected, and what each year of delay adds.
+        Read this one to understand the threat; read that one to schedule against it.</p>
       <p>Related demos:
         <a href="https://systemslibrarian.github.io/crypto-lab-harvest-timeline/" target="_blank" rel="noopener">crypto-lab-harvest-timeline</a> ·
         <a href="https://systemslibrarian.github.io/crypto-lab-shor/" target="_blank" rel="noopener">crypto-lab-shor</a> ·
@@ -1239,6 +1540,7 @@ function renderApp(): void {
     });
   });
 
+  wireCaptureSection();
   syncHeaderOffset();
   setupScrollSpy();
   syncUrl();

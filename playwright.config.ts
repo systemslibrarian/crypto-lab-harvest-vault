@@ -5,6 +5,11 @@ import { defineConfig } from '@playwright/test';
  * `vite preview`, so what passes here is what actually ships to Pages.
  * Run `npm run build` first (CI does).
  */
+// Port is overridable so a local run can dodge a port already taken by another
+// lab's preview server. CI leaves it at the default.
+const PORT = Number(process.env.PREVIEW_PORT ?? 4223);
+const BASE = `http://localhost:${PORT}/crypto-lab-harvest-vault/`;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -13,12 +18,12 @@ export default defineConfig({
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],
   projects: [{ name: 'chromium', use: { browserName: 'chromium', colorScheme: 'dark' } }],
   webServer: {
-    command: 'npm run preview -- --port 4223 --strictPort',
-    url: 'http://localhost:4223/crypto-lab-harvest-vault/',
+    command: `npm run preview -- --port ${PORT} --strictPort`,
+    url: BASE,
     reuseExistingServer: !process.env.CI,
   },
   use: {
-    baseURL: 'http://localhost:4223/crypto-lab-harvest-vault/',
+    baseURL: BASE,
     colorScheme: 'dark',
   },
 });

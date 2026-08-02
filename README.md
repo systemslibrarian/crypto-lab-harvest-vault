@@ -3,10 +3,19 @@
 ## What It Is
 
 Browser-based interactive visualizer for the Harvest Now, Decrypt Later
-(HNDL) quantum threat - the only demo in the crypto-lab suite that does
-not implement a cryptographic algorithm. Instead it implements a strategic
-threat model: adversaries are collecting encrypted data today, storing it,
-and will decrypt it retroactively once quantum computers arrive.
+(HNDL) quantum threat: adversaries are collecting encrypted data today,
+storing it, and will decrypt it retroactively once quantum computers arrive.
+
+Most of the page is a strategic threat model rather than an algorithm — but
+the central claim, that a PQC upgrade cannot reach backwards, is demonstrated
+rather than asserted. The **Prove it** panel runs a real key exchange in the
+browser, keeps a real wiretap copy of it, and then runs a real break against
+that stored copy: exhaustive discrete-log search over a 24-bit
+Diffie-Hellman group, HKDF-SHA-256, AES-256-GCM, and a Ring-LWE KEM
+(n = 256, q = 3329) for the hybrid upgrade. Deploy the upgrade *after* a
+capture and the recorded session still comes back byte-identical; deploy it
+*before* and the same attacker solves the same discrete log and still fails,
+because the lattice half of the key was never on the wire.
 
 The breach is invisible and retroactive. Organizations that wait to migrate
 to post-quantum cryptography are not safe - they have already been
@@ -41,7 +50,7 @@ match the literature.
 
 **[systemslibrarian.github.io/crypto-lab-harvest-vault](https://systemslibrarian.github.io/crypto-lab-harvest-vault/)**
 
-Work the Mosca calculator (X + Y > Z) with sector presets and three Q-Day scenarios, click the sector risk matrix to load a sector and watch it cross risk states as Z changes, and generate a copyable risk brief of your inputs, verdict, and top actions. Threat-model, evidence-and-confidence, and self-check panels keep the claim precise; selected sector and slider values are encoded in the URL so a configured view can be shared directly.
+Capture a real handshake in the **Prove it** panel, deploy the PQC upgrade after the fact, and run Q-Day to watch the recorded session come back byte-identical while the post-upgrade one does not. Then work the Mosca calculator (X + Y > Z) with sector presets and three Q-Day scenarios, click the sector risk matrix to load a sector and watch it cross risk states as Z changes, and generate a copyable risk brief of your inputs, verdict, and top actions. Threat-model, evidence-and-confidence, and self-check panels keep the claim precise; selected sector and slider values are encoded in the URL so a configured view can be shared directly.
 
 ## What Can Go Wrong
 
@@ -57,6 +66,13 @@ Work the Mosca calculator (X + Y > Z) with sector presets and three Q-Day scenar
   against Grover's quadratic speedup. The HNDL threat targets RSA and ECC
   key exchange - the handshake that establishes the session, not the
   session itself. See crypto-lab-grover for the symmetric story.
+- **The Prove it panel is toy-scale, and says so on the page.** 24-bit DH is
+  brute-forceable in a browser; 2048-bit DH is not, which is the whole reason
+  Shor's algorithm matters (it does not search — it finds the period). The
+  Ring-LWE KEM is the mechanism ML-KEM is built from, at teaching size,
+  IND-CPA only, not constant time, unreviewed. Neither is production
+  cryptography. What is exact at any size is the retroactivity: stored bytes
+  do not get re-encrypted by a later upgrade.
 - **The storage counter is illustrative.** ~23 TB/second of RSA/ECC
   traffic is an order-of-magnitude estimate. Nation-state storage costs
   are real but the exact collection rate is unknown.
@@ -86,7 +102,7 @@ npm run dev
 
 ## Related Demos
 
-- [crypto-lab-harvest-timeline](https://systemslibrarian.github.io/crypto-lab-harvest-timeline/) — the companion HNDL timeline and PQC-migration planner.
+- [crypto-lab-harvest-timeline](https://systemslibrarian.github.io/crypto-lab-harvest-timeline/) — the companion HNDL timeline and PQC-migration planner. **These two labs share a theorem on purpose.** This one is the *threat* lab: it argues the harvest is already happening, proves the retroactivity mechanism by capturing and breaking a live handshake, and produces a verdict about your data. That one is the *planning* lab: it takes a fleet of systems with different shelf lives and migration costs, projects which cross Q-Day unprotected, and prices each year of delay.
 - [crypto-lab-shor](https://systemslibrarian.github.io/crypto-lab-shor/) — Shor's algorithm, the quantum attack that makes Q-Day real.
 - [crypto-lab-grover](https://systemslibrarian.github.io/crypto-lab-grover/) — the symmetric-key side of the quantum story (why AES-256 survives).
 - [crypto-lab-pq-rotation](https://systemslibrarian.github.io/crypto-lab-pq-rotation/) — planning and rotating to post-quantum key material.
@@ -95,10 +111,16 @@ npm run dev
 ## Learning Path & Features
 
 The demo is structured as a guided learning instrument, not just an
-explainer. A sticky progress nav follows six steps — what is harvested,
-what breaks at Q-Day, why time matters, is my sector at risk, what
+explainer. A sticky progress nav follows seven steps — what is harvested,
+what breaks at Q-Day, why time matters, prove it, is my sector at risk, what
 mitigations help, and a self-check.
 
+- **Capture-then-upgrade exhibit** (`src/transcript.ts`, `src/lattice.ts`):
+  send a message over a real toy handshake, watch the ciphertext, nonce and
+  public keys land in "the adversary's store", deploy the PQC upgrade, send
+  again, then run Q-Day. Every verdict on that panel — recovered / not
+  recovered, byte-identical or not, fingerprint unchanged or not, exponents
+  tried, milliseconds spent — is measured from that run.
 - **Mosca calculator** with a three-scenario Q-Day comparison (aggressive
   2028 / center 2030 / conservative 2035) so the lesson is surviving the
   range, not guessing a date.
