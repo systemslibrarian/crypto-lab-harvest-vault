@@ -3,7 +3,8 @@ import { defineConfig } from '@playwright/test';
 /**
  * E2E accessibility gate. Tests run against the production build served by
  * `vite preview`, so what passes here is what actually ships to Pages.
- * Run `npm run build` first (CI does).
+ * The build runs as part of the webServer command, so a run always tests the
+ * current source rather than whatever bundle happens to be sitting in dist/.
  */
 // Port is overridable so a local run can dodge a port already taken by another
 // lab's preview server. CI leaves it at the default.
@@ -18,7 +19,10 @@ export default defineConfig({
   reporter: process.env.CI ? 'list' : [['list'], ['html', { open: 'never' }]],
   projects: [{ name: 'chromium', use: { browserName: 'chromium', colorScheme: 'dark' } }],
   webServer: {
-    command: `npm run preview -- --port ${PORT} --strictPort`,
+    // Build first: `vite preview` only serves the existing dist/, so without
+    // this a broken build leaves the last good bundle in place and the suite
+    // passes green against source that no longer compiles.
+    command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
     url: BASE,
     reuseExistingServer: !process.env.CI,
   },
