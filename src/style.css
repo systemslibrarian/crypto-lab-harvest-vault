@@ -515,12 +515,10 @@ p {
   );
 }
 
-/* On the light theme the band tint is pale, so white text fails contrast;
-   use the standard dark ink instead. */
-html[data-theme='light'] .qday-band {
-  color: var(--text);
-  text-shadow: none;
-}
+/* No light-theme override: the fill above is near-opaque dark red in BOTH
+   themes, so white ink is the pair that passes. The old override predates that
+   fill — it swapped in dark ink against a pale tint that no longer exists,
+   and measured 2.02:1 (#102133 on rgb(151,36,36)) once the reds landed. */
 
 .you-are-here,
 .qday-estimate-marker {
@@ -1388,6 +1386,14 @@ input[type='range'] {
   background: rgba(0, 170, 255, 0.14);
 }
 
+/* The current-step chip is the one --harvest-on-blue-tint pairing that sits on
+   the nav's 86%-translucent backdrop directly over the page gradient rather
+   than on a panel — measured 4.09:1 there with the light theme's #0a66c2.
+   A darker shade of the same hue clears 4.5:1. */
+html[data-theme='light'] .step-link.current {
+  color: #0a5cb0;
+}
+
 /* So anchor jumps and matrix "select sector" don't land under the sticky bars. */
 section[id] {
   scroll-margin-top: calc(var(--cl-h, 0px) + 3.5rem);
@@ -1772,9 +1778,12 @@ html[data-theme='light'] .act-3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* The static strip below replaces the cards outright. `display: none` rather
+     than the old `animation: none; opacity: 0`: an invisible card is still
+     laid out on top of the fallback — its text is selectable and findable
+     in-page while painting nothing. Closed means closed. */
   .act-card {
-    animation: none;
-    opacity: 0;
+    display: none;
   }
 
   .pkt,

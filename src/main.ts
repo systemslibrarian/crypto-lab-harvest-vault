@@ -679,7 +679,7 @@ function captureBodyInner(): string {
     .map((session, i) => captureRow(session, captureAttack?.[i], i))
     .join('');
   return `
-    <div class="capture-table-wrap">
+    <div class="capture-table-wrap" tabindex="0">
       <table class="capture-table">
         <caption>The adversary’s store — ${captureSessions.length} captured session(s), held as bytes only</caption>
         <thead>
