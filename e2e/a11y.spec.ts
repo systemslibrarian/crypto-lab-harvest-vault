@@ -1,5 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
-import { NARROW, boot, expectScrollersReachable, scan, settle } from './gate';
+import {
+  NARROW,
+  boot,
+  expectBaselineNotStale,
+  expectNoNewNonTextFailures,
+  expectScrollersReachable,
+  scan,
+  settle,
+} from './gate';
 
 /**
  * WCAG regression gate.
@@ -270,6 +278,55 @@ for (const theme of THEMES) {
     });
   }
 }
+
+/**
+ * The non-text baseline's third rule, which had never run.
+ *
+ * `nontext-baseline.ts` claims three: a finding not listed fails, a listed
+ * finding that got WORSE fails, and a listed finding that has been FIXED fails
+ * until its entry is deleted. The first two live in
+ * `expectNoNewNonTextFailures` and fire from every `scan` above. The third is
+ * `expectBaselineNotStale`, which was exported and never imported — so the
+ * baseline could only ever grow.
+ *
+ * It gets its own test, driving the states itself, rather than a call tacked
+ * onto the last state test. `nonTextSeen` is module state, and how much of it
+ * a given test sees depends on how Playwright happens to distribute tests
+ * across workers: at `--workers=1` every test above shares one module instance
+ * and the last one would see the union, while at the config's default
+ * parallelism each gets its own and would see almost nothing. An oracle whose
+ * verdict changes with the worker count is not an oracle, so this drives its
+ * own full pass and depends on nothing outside itself.
+ *
+ * Dark alone, and that is measured rather than assumed: captured through the
+ * gate's own path, the eleven states at both viewports yield exactly the
+ * thirteen findings the baseline lists — no entry missing, nothing extra. The
+ * `.timeline-list-event` variants only exist in the 380px list rendering and
+ * the `.active` ones need a selected event, so the pass has to cover every
+ * state at both widths to be sound.
+ *
+ * It calls `expectNoNewNonTextFailures` rather than the whole of `scan`: that
+ * is the function that populates `nonTextSeen`, and re-running axe, the
+ * contrast walk and the reflow checks over states the tests above already
+ * scanned would triple this file's cost to assert nothing new.
+ */
+test('the non-text baseline has no stale entries', async ({ page }) => {
+  test.setTimeout(300_000);
+  // One page walks every state, so the desktop width has to be restored by
+  // hand — the scans above get a fresh page per test and never need to.
+  const WIDE = page.viewportSize() ?? { width: 1280, height: 720 };
+  for (const state of STATES) {
+    // Each state drives from a fresh mount, exactly as the scans above do.
+    await boot(page, 'dark');
+    await state.drive(page);
+    await expectNoNewNonTextFailures(page, `stale sweep / ${state.label} / ${WIDE.width}px`);
+    await page.setViewportSize(NARROW);
+    await settle(page);
+    await expectNoNewNonTextFailures(page, `stale sweep / ${state.label} / ${NARROW.width}px`);
+    await page.setViewportSize(WIDE);
+  }
+  expectBaselineNotStale();
+});
 
 /**
  * WCAG 2.1.1 (Keyboard), asserted end to end rather than per-scan.
