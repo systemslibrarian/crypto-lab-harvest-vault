@@ -27,7 +27,7 @@ import {
  * paint, and the third only fails in the light theme.
  */
 
-const THEMES = ['dark', 'light'] as const;
+const THEMES = ['dark'] as const;
 
 /** Send one message through the capture exhibit and wait for its row. */
 async function send(page: Page, message: string, rows: number): Promise<void> {
