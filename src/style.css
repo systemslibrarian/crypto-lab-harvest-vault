@@ -126,20 +126,6 @@ p {
   backdrop-filter: blur(3px);
 }
 
-.theme-toggle {
-  position: fixed;
-  top: 0.9rem;
-  right: 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  width: 2.6rem;
-  height: 2.6rem;
-  font-size: 1.3rem;
-  cursor: pointer;
-  background-color: var(--panel);
-  color: var(--text);
-}
-
 .hero-panel {
   display: grid;
   gap: 1rem;
@@ -1593,7 +1579,6 @@ section[id] {
   .cl-skip-link,
   .skip-link,
   .progress-nav,
-  #theme-toggle,
   .no-print,
   footer {
     display: none !important;

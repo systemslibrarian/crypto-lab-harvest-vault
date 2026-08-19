@@ -512,14 +512,6 @@ function createActStrip(): string {
   `;
 }
 
-// Match the boot script's precedence: the shared header writes 'theme', this lab
-// historically wrote 'cv-theme'. Honour 'theme' first so we never override the
-// header toggle's most recent choice with a stale 'cv-theme' value.
-const persistedTheme = localStorage.getItem('theme') ?? localStorage.getItem('cv-theme');
-if (persistedTheme === 'dark' || persistedTheme === 'light') {
-  document.documentElement.setAttribute('data-theme', persistedTheme);
-}
-
 const appRoot = document.querySelector<HTMLDivElement>('#app');
 if (!appRoot) {
   throw new Error('App root not found.');
@@ -841,18 +833,6 @@ function getEventPosition(year: number): number {
   return ((year - timelineMin) / (timelineMax - timelineMin)) * 100;
 }
 
-function getTheme(): 'dark' | 'light' {
-  const active = document.documentElement.getAttribute('data-theme');
-  return active === 'light' ? 'light' : 'dark';
-}
-
-function setTheme(theme: 'dark' | 'light'): void {
-  document.documentElement.setAttribute('data-theme', theme);
-  // Write both keys so this lab and the shared header stay in sync.
-  localStorage.setItem('theme', theme);
-  localStorage.setItem('cv-theme', theme);
-}
-
 function categoryClass(event: TimelineEvent): string {
   switch (event.category) {
     case 'harvest':
@@ -1134,10 +1114,6 @@ function renderApp(): void {
   const mosca = computeMosca({ migrationYears, sensitivityYears, qDayYears }, CURRENT_YEAR);
 
   app.innerHTML = `
-    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme">${
-      getTheme() === 'dark' ? '☀' : '🌙'
-    }</button>
-
     <main>
       <header class="cl-hero">
         <div class="cl-hero-main">
@@ -1399,13 +1375,6 @@ function renderApp(): void {
       do all to the glory of God." — 1 Corinthians 10:31</p>
     </footer>
   `;
-
-  const toggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
-  toggle?.addEventListener('click', () => {
-    const nextTheme = getTheme() === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    renderApp();
-  });
 
   // Native <button> elements already activate on Enter/Space, so no keydown shim
   // is needed (it would double-fire). renderApp() rebuilds the DOM and drops focus
