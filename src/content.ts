@@ -173,7 +173,7 @@ export const MISCONCEPTIONS: Misconception[] = [
   {
     myth: '“Migrating to PQC fixes our old traffic too.”',
     reality:
-      'Wrong. PQC protects sessions from deployment onward. Anything captured before you migrated stays exposed — only forward secrecy deployed before collection, or never sending it, helps.',
+      'Wrong. PQC deployed now protects new sessions, not previously recorded traffic. Old captures need quantum-resistant protection already present at collection, such as appropriate PQ/hybrid key establishment or a sufficiently high-entropy secret mixed into key derivation. Ordinary classical forward secrecy does not stop solving a recorded ephemeral exchange; it protects against later long-term-key compromise.',
   },
   {
     myth: '“This only matters if Q-Day is exactly 2030.”',
@@ -197,7 +197,7 @@ export const GLOSSARY: GlossaryTerm[] = [
   { term: 'Q-Day', def: 'The (uncertain) day a cryptographically relevant quantum computer can break RSA/ECC. A probability range, not a fixed date.' },
   { term: 'Mosca’s theorem', def: 'You have a problem when X (data sensitivity lifetime) + Y (migration time) exceeds Z (years until Q-Day).' },
   { term: 'PQC', def: 'Post-Quantum Cryptography — algorithms designed to resist quantum attacks (e.g. ML-KEM, ML-DSA).' },
-  { term: 'PFS', def: 'Perfect Forward Secrecy — ephemeral per-session keys, so compromising a long-term key doesn’t expose past sessions.' },
+  { term: 'PFS', def: 'Perfect Forward Secrecy — ephemeral per-session keys, so compromising a long-term key doesn’t expose past sessions. Classical PFS does not prevent a quantum attacker from solving the recorded ephemeral public exchange.' },
   { term: 'ML-KEM (FIPS 203)', def: 'NIST-standardized post-quantum key-encapsulation mechanism (formerly Kyber).' },
   { term: 'ML-DSA (FIPS 204)', def: 'NIST-standardized post-quantum digital signature algorithm (formerly Dilithium).' },
   { term: 'Shor’s algorithm', def: 'Quantum algorithm that efficiently breaks RSA and elliptic-curve crypto — the engine behind HNDL.' },
@@ -218,7 +218,7 @@ export const ACTION_PLAN: ActionPhase[] = [
     items: [
       'Inventory public-key cryptography: TLS, VPN, SSH, S/MIME, code signing, certificates, APIs, backups, vendor links.',
       'Identify your long-sensitivity data flows — the high-X systems.',
-      'Turn on TLS 1.3 and forward secrecy wherever it is missing.',
+      'Turn on TLS 1.3 and forward secrecy against later long-term-key compromise; classical ECDHE alone is not quantum-resistant.',
       'Ask your key vendors for their PQC roadmaps in writing.',
     ],
   },
@@ -266,23 +266,23 @@ export const QUIZ: QuizQuestion[] = [
     q: 'Which action protects future traffic but does NOTHING for data an adversary already captured?',
     options: [
       'Deploying PQC / hybrid key exchange today',
-      'Having had forward secrecy in place before the data was collected',
-      'Never transmitting the data in the first place',
+      'Having had appropriate PQ/hybrid key establishment before collection',
+      'Having mixed a high-entropy pre-shared secret into key derivation before collection',
       'All of these help already-captured data equally',
     ],
     correct: 0,
-    explain: 'PQC deployed today protects new sessions only. Already-harvested ciphertext is beyond its reach — which is exactly why waiting is dangerous.',
+    explain: 'PQC deployed today protects new sessions only. The other specific protections had to be present before collection to protect those captures. Ordinary classical forward secrecy protects against later long-term-key compromise, not quantum recovery of a recorded ephemeral exchange.',
   },
   {
     q: 'An adversary may already hold years of your ciphertext. Which could limit the damage of that ALREADY-harvested data?',
     options: [
-      'Forward secrecy that existed before the data was collected',
-      'Migrating to PQC next quarter',
-      'Rotating the bulk cipher to AES-256 today',
+      'Appropriate quantum-resistant key protection already present at collection',
+      'Ordinary classical forward secrecy before collection',
+      'Migrating to PQC or rotating encryption keys next quarter',
       'Adding a new firewall rule',
     ],
     correct: 0,
-    explain: 'Only protection present at collection time limits old exposure. Everything deployed now helps future traffic only — the core HNDL problem.',
+    explain: 'Quantum-resistant key protection had to be present at collection: appropriate PQ/hybrid key establishment or a sufficiently high-entropy pre-shared secret mixed into key derivation. Classical PFS protects against later long-term-key compromise, but Shor can solve the recorded ephemeral public exchange. A later upgrade cannot rewrite an adversary’s stored copy. See RFC 8784, sections 1–2.',
   },
   {
     q: 'What is the MAIN target of the Harvest Now, Decrypt Later threat?',

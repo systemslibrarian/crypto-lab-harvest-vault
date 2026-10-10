@@ -39,8 +39,8 @@ match the literature.
 - Explaining to leadership why PQC migration is urgent NOW, not when
   quantum computers arrive
 - Calculating your organization's specific Mosca risk exposure
-- Understanding why perfect forward secrecy is the best available
-  protection for communications that are already being transmitted
+- Distinguishing classical forward secrecy against later long-term-key compromise
+  from quantum-resistant key protection already present when traffic is collected
 - Teaching the difference between the harvest phase (now) and the
   decrypt phase (future) - two separate events with a long gap between
 - Do NOT use as a substitute for a professional cryptographic risk
@@ -56,8 +56,15 @@ Capture a real handshake in the **Prove it** panel, deploy the PQC upgrade after
 
 - **PQC migration does not protect already-harvested data.** Deploying
   ML-KEM tomorrow does not decrypt-protect communications from last year.
-  Perfect forward secrecy is the only protection for communications that
-  have already occurred - and only if it was deployed before collection.
+  Old captures need appropriate quantum-resistant key protection already present
+  at collection: PQ/hybrid key establishment, or a sufficiently high-entropy
+  pre-shared secret mixed into key derivation by an appropriate protocol.
+  Ordinary classical PFS protects against later long-term-key compromise; it does
+  not prevent solving a recorded ephemeral DH/ECDH public exchange with Shor.
+  A later upgrade or re-encryption cannot rewrite an adversary's stored copy.
+  [RFC 8784 §§1–2](https://www.rfc-editor.org/rfc/rfc8784.html#section-1)
+  explains the recorded-exchange threat and the distinct role of a high-entropy
+  key-derivation secret; an authentication-only PSK is not equivalent.
 - **Q-Day uncertainty is real.** The 2030+-3 estimate is a consensus center
   of a wide distribution. Some credible researchers say 2028. Some say 2040.
   Mosca's Theorem is robust to this uncertainty: use the optimistic estimate
