@@ -393,7 +393,7 @@ const sectorContext: Record<Exclude<SectorKey, 'custom'>, { heading: string; bod
       'Personal risk varies, but meaningful exposure remains where data sensitivity outlasts migration and Q-Day timelines.',
     ],
     bullets: [
-      'Use services deploying modern TLS and forward secrecy',
+      'Use modern TLS and classical forward secrecy for key-compromise protection; seek PQ/hybrid key establishment for HNDL',
       'Reduce archival retention of unnecessary sensitive content',
       'Track provider post-quantum migration commitments',
     ],
@@ -416,10 +416,10 @@ const mitigationCards = [
     title: '2. DEPLOY PERFECT FORWARD SECRECY',
     lines: [
       'TLS 1.3 with ECDHE for classical PFS',
-      'X25519 + ML-KEM hybrid for post-quantum PFS',
-      'Session keys are ephemeral per handshake',
-      'Best available protection while traffic is actively flowing',
-      'Only works when deployed before collection happens',
+      'Classical PFS protects past sessions against later long-term-key compromise',
+      'It does not stop a quantum attacker solving a recorded ephemeral exchange',
+      'Appropriate PQ/hybrid key establishment must already protect keys at collection',
+      'A later upgrade cannot change the adversary’s stored ciphertext',
     ],
   },
   {
@@ -964,7 +964,7 @@ function topMitigations(): string[] {
     'Deploy hybrid key exchange (X25519 + ML-KEM) on new connections so traffic is protected from today onward.',
     sensitivityYears > 15
       ? 'Minimize retention of long-sensitivity data — once harvested it can never be re-protected.'
-      : 'Enable TLS 1.3 with forward secrecy everywhere it is currently missing.',
+      : 'Enable TLS 1.3 with classical forward secrecy against later key compromise; add appropriate PQ/hybrid key establishment for HNDL.',
   ];
 }
 
@@ -1009,8 +1009,10 @@ function briefText(): string {
     mit,
     ``,
     `CANNOT BE FIXED RETROACTIVELY`,
-    `  Migrating later does not protect already-harvested traffic. Only data sent`,
-    `  after forward secrecy / hybrid key exchange is deployed is safe. Re-run quarterly.`,
+    `  Migrating later cannot rewrite an adversary’s stored ciphertext. Quantum-resistant`,
+    `  key protection must already be present at collection. Classical forward secrecy`,
+    `  protects against later long-term-key compromise, not solving recorded ephemeral`,
+    `  public exchanges with Shor. Re-run quarterly.`,
   ].join('\n');
 }
 
