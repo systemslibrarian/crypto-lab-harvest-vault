@@ -106,19 +106,42 @@ export async function sha256Hex(bytes: Uint8Array): Promise<string> {
  * binds a transcript hash — so a key derived for one mode is never valid for the
  * other.
  */
-async function deriveSessionKey(mode: Mode, ikm: Uint8Array): Promise<CryptoKey> {
+/** HKDF-SHA-256 output bytes. The live session-key path and published vectors
+ * share this function so a conformance test cannot accidentally test WebCrypto
+ * beside the lab while leaving the lab's own derivation unchecked. */
+export async function hkdfSha256(
+  ikm: Uint8Array,
+  salt: Uint8Array,
+  info: Uint8Array,
+  length: number,
+): Promise<Uint8Array> {
   const base = await crypto.subtle.importKey('raw', ikm as BufferSource, 'HKDF', false, [
-    'deriveKey',
+    'deriveBits',
   ]);
-  return crypto.subtle.deriveKey(
+  const bits = await crypto.subtle.deriveBits(
     {
       name: 'HKDF',
       hash: 'SHA-256',
-      salt: new Uint8Array(0),
-      info: new TextEncoder().encode(`crypto-lab-harvest-vault/v1/${mode}`),
+      salt: salt as BufferSource,
+      info: info as BufferSource,
     },
     base,
-    { name: 'AES-GCM', length: 256 },
+    length * 8,
+  );
+  return new Uint8Array(bits);
+}
+
+async function deriveSessionKey(mode: Mode, ikm: Uint8Array): Promise<CryptoKey> {
+  const raw = await hkdfSha256(
+    ikm,
+    new Uint8Array(0),
+    new TextEncoder().encode(`crypto-lab-harvest-vault/v1/${mode}`),
+    32,
+  );
+  return crypto.subtle.importKey(
+    'raw',
+    raw as BufferSource,
+    { name: 'AES-GCM' },
     false,
     ['encrypt', 'decrypt'],
   );
