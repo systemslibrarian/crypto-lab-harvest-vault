@@ -1319,7 +1319,7 @@ function renderApp(): void {
           <p>Data encrypted today with RSA-2048 or ECC can become retroactively readable when cryptographically relevant quantum computers arrive, whether closer to 2030 or 2035.</p>
           <p>Organizations protecting 10+ year sensitivity data cannot wait for Q-Day to begin migration. By the time capability exists, adversaries may already hold years of collected ciphertext.</p>
           <p>The NSA stated in 2022 that the threat is significant enough to begin migrating immediately, even though large-scale quantum computers capable of breaking encryption do not yet exist.</p>
-          <p>2026 has been designated the Year of Quantum Security by FBI, NIST, and CISA.</p>
+          <p>NIST's final transition report (NIST IR 8547, October 2026) tells organizations to "treat the migration to PQC as a current operational priority."</p>
           <p>If you are not migrating, you are being harvested.</p>
         </article>
       </section>

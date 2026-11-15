@@ -90,13 +90,27 @@ Capture a real handshake in the **Prove it** panel, deploy the PQC upgrade after
   was documented in the 2013 Snowden disclosures, and state-level adversaries
   with fiber access, BGP influence, or compromised infrastructure have been
   collecting encrypted communications for years.
-- **NIST cites HNDL as the primary driver** for urgent PQC migration: "starting
+- **NIST cites HNDL as one of the main reasons** the PQC migration is urgent: "starting
   the transition to post-quantum cryptography now is critical to preventing
-  these future breaches." FBI, CISA, and NIST framed 2026 as a year of quantum security.
+  these future breaches" ([NIST IR 8547, *Transition to Post-Quantum Cryptography Standards*, final, October 2026, §1 Introduction](https://nvlpubs.nist.gov/nistpubs/ir/2026/NIST.IR.8547.pdf)).
+  The same section says organizations "should treat the migration to PQC as a
+  current operational priority."
 - **Operators are pulling deadlines forward** - Cloudflare moved up its internal
   Q-Day readiness target (full post-quantum security by 2029) following 2025-2026
   resource-estimate papers.
 - **The migration window is open** - and the long gap between the harvest phase and the decrypt phase is exactly why acting early matters.
+
+**Standards reviewed 15 November 2026:** the NIST quotations above are from the final NIST IR 8547
+(October 2026), §1. An earlier line here said FBI, CISA, and NIST had framed 2026 as a "Year of
+Quantum Security"; that designation is not an agency one. It was made by the trade publication The
+Quantum Insider — "The Quantum Insider is designating 2026 as the Year of Quantum Security" — whose
+Washington launch event on 12 January 2026 had speakers from those three agencies
+([The Quantum Insider](https://thequantuminsider.com/2026/01/06/after-a-year-of-quantum-awareness-2026-becomes-the-year-of-quantum-security/)).
+No FBI, CISA, or NIST publication was found making the designation, so the sentence was replaced by
+what NIST itself publishes. The joint federal guidance that does exist is the CISA/NSA/NIST
+"Quantum-Readiness: Migration to Post-Quantum Cryptography" factsheet of 21 August 2023
+([CISA](https://www.cisa.gov/resources-tools/resources/quantum-readiness-migration-post-quantum-cryptography)),
+which names no year.
 
 ## How to Run Locally
 
