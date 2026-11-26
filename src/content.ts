@@ -30,7 +30,7 @@ export interface SourceItem {
 
 export const SOURCES: SourceItem[] = [
   {
-    claim: 'Encrypted traffic is being collected at scale, today.',
+    claim: 'Large-scale traffic collection has been documented.',
     confidence: 'confirmed',
     detail:
       'The 2013 Snowden disclosures documented bulk collection and upstream interception of encrypted Internet traffic (PRISM, XKeyscore, upstream programs). Harvesting does not require breaking the crypto first.',
@@ -74,9 +74,9 @@ export const SOURCES: SourceItem[] = [
     claim: 'Q-Day timing is genuinely uncertain.',
     confidence: 'estimate',
     detail:
-      'Expert surveys center near 2030 ±3 years with a long tail. Treat Q-Day as a probability distribution (credible range ~2028–2035+), not a fixed date — which is exactly why X + Y > Z is robust to the uncertainty.',
-    source: 'Global Risk Institute, Quantum Threat Timeline reports',
-    url: 'https://globalriskinstitute.org/publication/quantum-computing-cybersecurity/',
+      'The comparison uses 2028, 2030 and 2035 as assumed arrival years. Varying Z tests how the shelf-life and migration schedule would change. A migration target is a different date from the arrival of a capable machine.',
+    source: 'NIST IR 8547, Transition to Post-Quantum Cryptography Standards, §3',
+    url: 'https://doi.org/10.6028/NIST.IR.8547',
   },
   {
     claim: 'Major providers are already migrating.',
@@ -128,7 +128,7 @@ export const SECTOR_RATIONALE: Record<string, string> = {
   government:
     'High sensitivity (decades) plus slow migration (legacy systems, certification, coalition interop) puts it deep in the danger zone.',
   healthcare:
-    'Genomic and EHR data stay sensitive 50–80+ years while clinical ecosystems migrate slowly — the worst combination of long Y and large X.',
+    'Genomic and EHR data stay sensitive 50–80+ years while clinical ecosystems migrate slowly — the preset combines a long shelf life (X) with a multi-year migration (Y).',
   finance:
     'Shorter sensitivity than health, but deal flow and strategy data plus fast-but-not-instant migration still cross the line.',
   legal:
@@ -149,9 +149,9 @@ export interface ZScenario {
 
 // Teaching uncertainty: the lesson is surviving the range, not guessing the date.
 export const Z_SCENARIOS: ZScenario[] = [
-  { label: 'Aggressive', year: 2028, note: 'optimistic researcher estimates' },
-  { label: 'Center', year: 2030, note: 'consensus center, ~±3 years' },
-  { label: 'Conservative', year: 2035, note: 'government planning backstop' },
+  { label: 'Early', year: 2028, note: 'illustrative early arrival' },
+  { label: 'Middle', year: 2030, note: 'illustrative middle scenario' },
+  { label: 'Late', year: 2035, note: 'illustrative later arrival' },
 ];
 
 export interface Misconception {

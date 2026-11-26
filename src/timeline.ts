@@ -12,7 +12,7 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
     label: 'Snowden revelations',
     category: 'harvest',
     description:
-      'NSA mass collection of encrypted internet traffic confirmed. PRISM, XKeyscore, upstream collection. HNDL strategy confirmed by disclosed documents.',
+      'NSA mass collection of encrypted internet traffic confirmed. PRISM, XKeyscore, upstream collection. These disclosures do not establish who has recorded a particular session or an intent to decrypt it with a future quantum computer.',
   },
   {
     year: 2015,
@@ -98,10 +98,10 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
   },
   {
     year: 2030,
-    label: 'Q-Day consensus estimate (center)',
+    label: 'Illustrative Q-Day scenario',
     category: 'qday-estimate',
     description:
-      'Most estimates center on 2030±3 years for cryptographically relevant quantum computers. Not a hard date — a probability distribution.',
+      'The lesson uses 2030 as one assumed arrival year in its scenario comparison.',
   },
   {
     year: 2031,
@@ -113,10 +113,10 @@ export const TIMELINE_EVENTS: TimelineEvent[] = [
   },
   {
     year: 2033,
-    label: 'Q-Day conservative estimate',
+    label: 'Later Q-Day scenario',
     category: 'qday-estimate',
     description:
-      'Academic consensus: 2030–2035 for RSA-2048 breaking. ETSI and government planning timelines use mid-2030s as backstop.',
+      'A later assumed arrival leaves more time in the model. Government migration deadlines describe when to protect systems.',
   },
   {
     year: 2035,

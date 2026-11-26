@@ -3,8 +3,7 @@
 ## What It Is
 
 Browser-based interactive visualizer for the Harvest Now, Decrypt Later
-(HNDL) quantum threat: adversaries are collecting encrypted data today,
-storing it, and will decrypt it retroactively once quantum computers arrive.
+(HNDL) quantum threat: an adversary could retain encrypted sessions today and decrypt some later if sufficiently capable quantum computers become available.
 
 Most of the page is a strategic threat model rather than an algorithm — but
 the central claim, that a PQC upgrade cannot reach backwards, is demonstrated
@@ -17,13 +16,11 @@ capture and the recorded session still comes back byte-identical; deploy it
 *before* and the same attacker solves the same discrete log and still fails,
 because the lattice half of the key was never on the wire.
 
-The breach is invisible and retroactive. Organizations that wait to migrate
-to post-quantum cryptography are not safe - they have already been
-compromised. They will learn this at Q-Day.
+The calculator models a possible capture. It cannot establish that anyone intercepted an organization’s traffic. A record encrypted today has max(0, X − Z) sensitive years remaining at the assumed arrival. The planning shortfall is max(0, X + Y − Z), allowing for classical sessions issued until migration finishes.
 
 Features Mosca's Theorem (X + Y > Z) as an interactive risk calculator
 with sector-specific presets, an interactive HNDL timeline from 2013
-through the Q-Day probability window, and a sector risk matrix across
+through the illustrative Q-Day scenarios, and a sector risk matrix across
 healthcare, government, finance, legal, library, and enterprise.
 
 The calculator uses Mosca's canonical variable convention (matching the
@@ -65,10 +62,7 @@ Capture a real handshake in the **Prove it** panel, deploy the PQC upgrade after
   [RFC 8784 §§1–2](https://www.rfc-editor.org/rfc/rfc8784.html#section-1)
   explains the recorded-exchange threat and the distinct role of a high-entropy
   key-derivation secret; an authentication-only PSK is not equivalent.
-- **Q-Day uncertainty is real.** The 2030+-3 estimate is a consensus center
-  of a wide distribution. Some credible researchers say 2028. Some say 2040.
-  Mosca's Theorem is robust to this uncertainty: use the optimistic estimate
-  (Z=6) and see if X+Y>6. If it is, you cannot afford to be wrong.
+- **The arrival year is uncertain.** Compare 2028, 2030 and 2035 as classroom scenarios. Starting by the assumed arrival year minus Y permits migration to finish by arrival. Subtract both Y and X to allow the last classically protected record its full shelf life.
 - **Symmetric crypto is NOT the threat.** AES-256 and SHA-512 are safe
   against Grover's quadratic speedup. The HNDL threat targets RSA and ECC
   key exchange - the handshake that establishes the session, not the
@@ -86,10 +80,7 @@ Capture a real handshake in the **Prove it** panel, deploy the PQC upgrade after
 
 ## Real-World Usage
 
-- **The HNDL threat is confirmed** - NSA mass collection of encrypted traffic
-  was documented in the 2013 Snowden disclosures, and state-level adversaries
-  with fiber access, BGP influence, or compromised infrastructure have been
-  collecting encrypted communications for years.
+- **Recorded sessions are a planning concern.** Large-scale communications collection has been documented. Whether a given session was captured, retained and could later be decrypted depends on the adversary and the protocol.
 - **NIST cites HNDL as one of the main reasons** the PQC migration is urgent: "starting
   the transition to post-quantum cryptography now is critical to preventing
   these future breaches" ([NIST IR 8547, *Transition to Post-Quantum Cryptography Standards*, final, October 2026, §1 Introduction](https://nvlpubs.nist.gov/nistpubs/ir/2026/NIST.IR.8547.pdf)).
@@ -123,7 +114,7 @@ npm run dev
 
 ## Related Demos
 
-- [crypto-lab-harvest-timeline](https://systemslibrarian.github.io/crypto-lab-harvest-timeline/) — the companion HNDL timeline and PQC-migration planner. **These two labs share a theorem on purpose.** This one is the *threat* lab: it argues the harvest is already happening, proves the retroactivity mechanism by capturing and breaking a live handshake, and produces a verdict about your data. That one is the *planning* lab: it takes a fleet of systems with different shelf lives and migration costs, projects which cross Q-Day unprotected, and prices each year of delay.
+- [crypto-lab-harvest-timeline](https://systemslibrarian.github.io/crypto-lab-harvest-timeline/) — the companion HNDL timeline and PQC-migration planner. **These two labs share a theorem on purpose.** This one is the *threat* lab: it models possible capture, proves the retroactivity mechanism by capturing and breaking a live handshake, and compares the dates implied by your assumptions. That one is the *planning* lab: it takes a fleet of systems with different shelf lives and migration costs, projects which cross Q-Day unprotected, and prices each year of delay.
 - [crypto-lab-shor](https://systemslibrarian.github.io/crypto-lab-shor/) — Shor's algorithm, the quantum attack that makes Q-Day real.
 - [crypto-lab-grover](https://systemslibrarian.github.io/crypto-lab-grover/) — the symmetric-key side of the quantum story (why AES-256 survives).
 - [crypto-lab-pq-rotation](https://systemslibrarian.github.io/crypto-lab-pq-rotation/) — planning and rotating to post-quantum key material.
@@ -142,8 +133,8 @@ mitigations help, and a self-check.
   again, then run Q-Day. Every verdict on that panel — recovered / not
   recovered, byte-identical or not, fingerprint unchanged or not, exponents
   tried, milliseconds spent — is measured from that run.
-- **Mosca calculator** with a three-scenario Q-Day comparison (aggressive
-  2028 / center 2030 / conservative 2035) so the lesson is surviving the
+- **Mosca calculator** with a three-scenario Q-Day comparison (illustrative
+  2028 / 2030 / 2035) so the lesson is surviving the
   range, not guessing a date.
 - **Interactive sector matrix**: click a dot to load that sector into the
   calculator; toggle Z = 4 / 8 / 12 to watch sectors cross between risk states.

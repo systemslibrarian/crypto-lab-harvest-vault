@@ -20,7 +20,11 @@ export interface MoscaResult {
   riskLevel: 'critical' | 'high' | 'moderate' | 'low' | 'safe';
   explanation: string;
   dataExposureYear: number;
+  /** Latest start for completing migration by the assumed arrival year. */
   migrationDeadline: number;
+  /** Latest start allowing the last classically protected record to finish its shelf life by arrival. */
+  shelfLifeStartYear: number;
+  recordYearsRemaining: number;
 }
 
 export const SECTOR_PRESETS: Record<
@@ -100,22 +104,14 @@ function toRiskLevel(riskMargin: number): MoscaResult['riskLevel'] {
   return 'safe';
 }
 
-function buildExplanation(
-  atRisk: boolean,
-  riskMargin: number,
-  XplusY: number,
-  Z: number,
-): string {
-  if (atRisk) {
-    return `At risk: X + Y = ${XplusY} is greater than Z = ${Z}. Data encrypted today is likely still sensitive ${riskMargin} year(s) after Q-Day.`;
+function buildExplanation(riskMargin: number, XplusY: number, Z: number): string {
+  if (riskMargin > 0) {
+    return `At risk in this model. X + Y = ${XplusY} exceeds Z = ${Z}. Starting now is ${riskMargin} year(s) late for the full shelf-life window.`;
   }
-
-  const yearsBuffer = Math.abs(riskMargin);
-  if (yearsBuffer <= 5) {
-    return `Low buffer: X + Y = ${XplusY} is only ${yearsBuffer} year(s) below Z = ${Z}. Any delay could move this into at-risk territory.`;
+  if (riskMargin === 0) {
+    return `X + Y = Z = ${Z}. Starting now meets the shelf-life boundary with no spare time.`;
   }
-
-  return `Currently safer: X + Y = ${XplusY} is ${yearsBuffer} year(s) below Z = ${Z}, giving more migration buffer.`;
+  return `X + Y = ${XplusY} is below Z = ${Z}. Starting now leaves ${-riskMargin} year(s) of planning buffer.`;
 }
 
 export function computeMosca(input: MoscaInput, currentYear: number): MoscaResult {
@@ -139,9 +135,11 @@ export function computeMosca(input: MoscaInput, currentYear: number): MoscaResul
     atRisk,
     riskMargin,
     riskLevel: toRiskLevel(riskMargin),
-    explanation: buildExplanation(atRisk, riskMargin, XplusY, Z),
+    explanation: buildExplanation(riskMargin, XplusY, Z),
     dataExposureYear: currentYear + Z,
     // Latest year migration can START and still finish (it takes Y years) before Q-Day.
-    migrationDeadline: currentYear + (Z - Y),
+    migrationDeadline: currentYear + Z - Y,
+    shelfLifeStartYear: currentYear + Z - XplusY,
+    recordYearsRemaining: Math.max(0, X - Z),
   };
 }

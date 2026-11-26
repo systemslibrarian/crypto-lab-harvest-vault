@@ -140,6 +140,21 @@ describe('explanation text stays consistent with the verdict', () => {
   });
 });
 
+describe('record lifetime and migration schedule', () => {
+  it.each([
+    [5, 6, 8, 2023, 2028, 0],
+    [9, 4, 8, 2021, 2030, 1],
+    [4, 4, 8, 2026, 2030, 0],
+    [2, 2, 8, 2030, 2032, 0],
+  ])('distinguishes X=%i Y=%i Z=%i', (X, Y, Z, start, finishOnlyStart, remaining) => {
+    const m = compute({ sensitivityYears: X, migrationYears: Y, qDayYears: Z });
+    expect(m.shelfLifeStartYear).toBe(start);
+    expect(m.migrationDeadline).toBe(finishOnlyStart);
+    expect(m.recordYearsRemaining).toBe(remaining);
+    if (X + Y === Z) expect(m.explanation).toContain('no spare time');
+  });
+});
+
 describe('sector presets model realistic HNDL exposure', () => {
   it('every preset with long shelf life is at risk at a mid-range Q-Day (Z=8)', () => {
     for (const [key, preset] of Object.entries(SECTOR_PRESETS)) {

@@ -469,9 +469,9 @@ function createActStrip(): string {
     .join('');
 
   return `
-    <div class="act-strip" role="img" aria-label="Three-act HNDL attack: Act 1, encrypted traffic is copied and stored today. Act 2, it waits in storage for years. Act 3, at Q-Day a quantum computer recovers the keys and every stored message becomes readable.">
+    <div class="act-strip" role="img" aria-label="Illustrative scenario: someone records a classically protected session, retains it, and may later decrypt it with a sufficiently capable quantum computer.">
       <div class="act-card act-1">
-        <h3>ACT 1 · HARVEST <span class="act-when">2026 — happening now</span></h3>
+        <h3>ACT 1 · HARVEST <span class="act-when">2026 — assumed capture</span></h3>
         <div class="scene scene-harvest">
           <div class="node">${ICON.doc}<span>your traffic</span></div>
           <div class="wire" aria-hidden="true">${packets}</div>
@@ -486,7 +486,7 @@ function createActStrip(): string {
           <div class="vault" aria-hidden="true">${vaultChips}</div>
           <div class="year-ticker" aria-hidden="true"><div class="year-reel">${years}</div></div>
         </div>
-        <p class="act-cap">The ciphertext sits in storage. The lock holds — but waiting costs the attacker nothing.</p>
+        <p class="act-cap">The collector retains the recording and its handshake. Storage and retention are assumptions of this example.</p>
       </div>
 
       <div class="act-card act-3">
@@ -498,7 +498,7 @@ function createActStrip(): string {
             <span class="reveal"><span class="cipher">●●●●●●●●</span><span class="plain">PLAINTEXT</span></span>
           </div>
         </div>
-        <p class="act-cap">Shor's algorithm recovers the keys. Every harvested message — yours included — becomes readable at once.</p>
+        <p class="act-cap">A sufficiently capable quantum computer could defeat the classical key exchange in this example. Decryption would require the relevant recording and computational resources.</p>
       </div>
 
       <div class="act-static" aria-hidden="true">
@@ -938,8 +938,8 @@ function harvestBarInner(qDayYearAbsolute: number): string {
   const nowPct = ((qDayYearAbsolute - CURRENT_YEAR) / total) * 100;
   const decryptPct = ((horizon - qDayYearAbsolute) / total) * 100;
   return `
-    <div class="harvested-past" style="width:${Math.max(pastPct, 0)}%">already harvested</div>
-    <div class="harvested-now" style="width:${Math.max(nowPct, 0)}%">being harvested now</div>
+    <div class="harvested-past" style="width:${Math.max(pastPct, 0)}%">possible earlier captures</div>
+    <div class="harvested-now" style="width:${Math.max(nowPct, 0)}%">possible collection period</div>
     <div class="harvested-qday" style="width:${Math.max(decryptPct, 0)}%">decryptable at Q-Day</div>
   `;
 }
@@ -977,13 +977,7 @@ function verdictText(m: MoscaResult): string {
 // <pre> and the clipboard copy, so they can never drift apart.
 function briefText(): string {
   const m = moscaForState();
-  const neededStart = m.dataExposureYear - m.Y;
-  const behind = CURRENT_YEAR - neededStart;
   const sign = m.XplusY > m.Z ? '>' : m.XplusY === m.Z ? '=' : '<';
-  const schedule =
-    behind > 0
-      ? `Already ${behind} year(s) behind: migration needed to start by ${neededStart}.`
-      : 'Still inside the window: migration can start now and finish before Q-Day.';
   const mit = topMitigations()
     .map((t, i) => `  ${i + 1}. ${t}`)
     .join('\n');
@@ -1002,8 +996,7 @@ function briefText(): string {
     ``,
     `SCHEDULE`,
     `  Q-Day estimate year ........... ${m.dataExposureYear}`,
-    `  Latest year to start .......... ${neededStart}`,
-    `  ${schedule}`,
+    ...scheduleLines(m),
     ``,
     `TOP 3 ACTIONS FOR THIS PROFILE`,
     mit,
@@ -1029,18 +1022,17 @@ async function copyToClipboard(text: string, btn: HTMLButtonElement): Promise<vo
   }, 1800);
 }
 
+function scheduleLines(m: MoscaResult): string[] {
+  return [
+    m.explanation,
+    `Latest start to allow both migration and the full shelf life: ${m.shelfLifeStartYear}.`,
+    `Latest start to finish migration by ${m.dataExposureYear} alone: ${m.migrationDeadline}.`,
+    `A record encrypted in ${CURRENT_YEAR} has ${m.recordYearsRemaining} year(s) of sensitivity remaining at the assumed arrival in ${m.dataExposureYear}.`,
+  ];
+}
+
 function verdictInner(mosca: MoscaResult): string {
-  const neededStart = mosca.dataExposureYear - mosca.Y;
-  const yearsBehind = CURRENT_YEAR - neededStart;
   const sign = mosca.XplusY > mosca.Z ? '>' : mosca.XplusY === mosca.Z ? '=' : '<';
-  // Data encrypted *today* has shelf life X, so it outlives Q-Day by X - Z.
-  // The full X + Y - Z margin applies to data encrypted at the END of migration.
-  const todayMargin = mosca.X - mosca.Z;
-  const atRiskBody = mosca.atRisk
-    ? `Data encrypted during your ${mosca.Y}-year migration stays sensitive up to ${mosca.riskMargin} year(s) past Q-Day${
-        todayMargin > 0 ? `; data encrypted today alone outlives Q-Day by ${todayMargin} year(s)` : ''
-      }. An adversary collecting now can read it later.`
-    : `Current buffer: migration and data sensitivity both complete ${Math.abs(mosca.riskMargin)} year(s) before this Q-Day estimate.`;
   return `
     <p class="math">X + Y = ${mosca.X} + ${mosca.Y} = ${mosca.XplusY} years</p>
     <p class="math">Z = ${mosca.Z} years</p>
@@ -1050,13 +1042,7 @@ function verdictInner(mosca: MoscaResult): string {
         ? `AT RISK - ${mosca.riskLevel.toUpperCase()}`
         : `NOT AT RISK - ${mosca.riskLevel.toUpperCase()}`
     }</p>
-    <p>${atRiskBody}</p>
-    <p>Q-Day estimate year: ${mosca.dataExposureYear}. To finish by then, migration needed to start by ${neededStart}.</p>
-    <p>${
-      yearsBehind > 0
-        ? `You are already ${yearsBehind} year(s) behind this schedule.`
-        : 'You are still inside the migration window if execution starts now.'
-    }</p>
+    ${scheduleLines(mosca).map(line => `<p>${escapeHtml(line)}</p>`).join('')}
   `;
 }
 
@@ -1130,9 +1116,9 @@ function renderApp(): void {
       </header>
       ${createProgressNav()}
       <section class="panel hero-panel" id="threat">
-        <h2 class="hero-headline">The breach has already happened.<br/>You just don't know it yet.</h2>
-        <p class="lead">Adversaries are collecting your encrypted communications today. RSA and ECC cannot be broken now - but they will be. When quantum computers arrive, every stored ciphertext becomes readable.</p>
-        <p class="lead">This is Harvest Now, Decrypt Later. It is not a future threat. It is a present collection strategy.</p>
+        <h2 class="hero-headline">Could a recording made today still matter years from now?</h2>
+        <p class="lead">If someone records a session protected only by vulnerable classical key establishment, a future quantum computer of sufficient capability could let them decrypt it while its contents are still sensitive.</p>
+        <p class="lead">Harvest Now, Decrypt Later is a threat to plan for. This calculator estimates timing under your assumptions. It has no observation of your traffic.</p>
 
         ${createActStrip()}
 
@@ -1211,7 +1197,7 @@ function renderApp(): void {
         <div class="timeline-ribbon-wrap">
           <div class="timeline-ribbon" style="min-width:1200px;">
             <div class="qday-band" style="left:${bandStart}%;width:${Math.max(bandEnd - bandStart, 1)}%;">
-              Q-Day probability window (2028-2035, consensus center: ~2030)
+              Illustrative Q-Day scenarios (2028–2035)
             </div>
             <div class="timeline-line"></div>
             <div class="you-are-here" style="left:${nowPos}%">
@@ -1255,7 +1241,7 @@ function renderApp(): void {
 
           <label for="z-slider">Z - Q-Day estimate (years until cryptographically relevant quantum computer): <span id="z-value">${qDayYears}</span> years (<span id="z-year">${qDayYearAbsolute}</span>)</label>
           <input id="z-slider" type="range" min="1" max="20" value="${qDayYears}" aria-valuemin="1" aria-valuemax="20" aria-valuenow="${qDayYears}" aria-valuetext="${qDayYears} years" />
-          <p class="small-note">Consensus range: 2028-2035, centered near 2030 +- 3 years. Use ranges, not certainties.</p>
+          <p class="small-note">The preset years are classroom assumptions. Change Z to see how much the plan depends on the assumed arrival time.</p>
         </div>
 
         <p class="sr-only" id="mosca-status" role="status" aria-live="polite">${moscaStatus(mosca)}</p>
@@ -1320,7 +1306,7 @@ function renderApp(): void {
           <p>Organizations protecting 10+ year sensitivity data cannot wait for Q-Day to begin migration. By the time capability exists, adversaries may already hold years of collected ciphertext.</p>
           <p>The NSA stated in 2022 that the threat is significant enough to begin migrating immediately, even though large-scale quantum computers capable of breaking encryption do not yet exist.</p>
           <p>NIST's final transition report (NIST IR 8547, October 2026) tells organizations to "treat the migration to PQC as a current operational priority."</p>
-          <p>If you are not migrating, you are being harvested.</p>
+          <p>An inventory can identify services whose recorded sessions would still matter to you years from now.</p>
         </article>
       </section>
 
@@ -1360,9 +1346,9 @@ function renderApp(): void {
     <footer>
       <p class="lab-scope"><strong>What this lab is for, and what its companion is for.</strong>
         Two labs here work the same theorem, deliberately. <em>This</em> one is the threat lab:
-        it argues that harvested traffic is already lost, and then proves the mechanism by
+        it illustrates what later migration can change by
         capturing a live handshake in your browser and breaking it after the fact. Its output is
-        a verdict about <em>your</em> data —
+        a timing estimate for the assumptions you enter —
         <a href="https://systemslibrarian.github.io/crypto-lab-harvest-timeline/" target="_blank" rel="noopener">crypto-lab-harvest-timeline</a>
         is the planning lab: it takes a fleet of systems with different shelf lives and migration
         costs and projects which of them cross Q-Day unprotected, and what each year of delay adds.
