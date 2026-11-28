@@ -34,6 +34,8 @@ computer. Because the risk condition is the symmetric sum `X + Y > Z`, the
 verdict never depends on which lever is which — but the labels do, so they
 match the literature.
 
+**Two planning dates.** Subtracting Y from the estimated Q-Day tells you when to start a migration that finishes on Q-Day. Protecting newly encrypted records for their full shelf life X moves the start X years earlier. For a hypothetical Q-Day in 2040, a three-year migration and records that must stay confidential for ten years, those dates are 2037 and 2027 respectively. Finishing in 2030 gives the last records encrypted under the old system ten years before 2040. This example assumes the old system keeps encrypting records during migration. Changing future encryption also cannot change a ciphertext already copied by somebody else.
+
 ## When to Use It
 
 - Explaining to leadership why PQC migration is urgent NOW, not when
